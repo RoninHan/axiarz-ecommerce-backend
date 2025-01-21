@@ -12,6 +12,13 @@ pub struct UserModel {
     pub app_id: String,
     pub phone: String,
     pub birthday: Option<DateTimeWithTimeZone>,
+    pub password: String,
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct LoginModel {
+    pub email: String,
+    pub password: String,
 }
 
 pub struct UserServices;
@@ -26,7 +33,7 @@ impl UserServices {
             name: Set(form_data.name.to_owned()),
             sex: Set(sex),
             email: Set(Some(form_data.email)),
-            app_id: Set(form_data.app_id.to_owned()),
+            password: Set(form_data.password),
             phone: Set(Some(form_data.phone.to_owned())),
             birthday: Set(form_data.birthday),
             created_at: Set(DateTimeWithTimeZone::from(Utc::now())),
@@ -52,7 +59,7 @@ impl UserServices {
             id: user.id,
             name: Set(form_data.name.to_owned()),
             email: Set(Some(form_data.email)),
-            app_id: Set(form_data.app_id.to_owned()),
+            password: Set(form_data.password),
             sex: Set(sex),
             phone: Set(Some(form_data.phone)),
             birthday: Set(form_data.birthday),
@@ -92,5 +99,15 @@ impl UserServices {
 
     pub async fn find_user_by_id(db: &DbConn, id: i32) -> Result<Option<user::Model>, DbErr> {
         User::find_by_id(id).one(db).await
+    }
+
+    pub async fn find_user_by_email(
+        db: &DbConn,
+        email: &str,
+    ) -> Result<Option<user::Model>, DbErr> {
+        User::find()
+            .filter(user::Column::Email.contains(email))
+            .one(db)
+            .await
     }
 }

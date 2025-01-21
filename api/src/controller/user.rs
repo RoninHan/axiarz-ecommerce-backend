@@ -1,10 +1,13 @@
-use crate::tools::{AppState, Params, ResponseData, ResponseStatus};
+use crate::{
+    middleware::auth::Auth,
+    tools::{AppState, Params, ResponseData, ResponseStatus},
+};
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
     response::Json,
 };
-use service::{UserModel, UserServices};
+use service::{LoginModel, UserModel, UserServices};
 
 use serde_json::json;
 use serde_json::to_value;
@@ -92,5 +95,53 @@ impl UserController {
             "status": "success",
             "data": user
         })))
+    }
+
+    pub async fn login(
+        state: State<AppState>,
+        Json(mut payload): Json<LoginModel>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let email = &payload.email;
+        let password = &payload.password;
+        // Check if email and password are empty
+        if email.is_empty() || password.is_empty() {
+            return Err((StatusCode::BAD_REQUEST, "Email and password are required"));
+        }
+
+        // Find user by email
+        let user = UserServices::find_user_by_email(&state.conn, email)
+            .await
+            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to find user"))?;
+
+        // Check if user is found
+        let user = user.unwrap();
+
+        // Check if password is found
+        let hashed_password = &user.password;
+
+        // Verify password
+        match Auth::verify_password(password, hashed_password) {
+            Ok(is_valid) => {
+                if is_valid {
+                    // Generate JWT token
+                    let token = Auth::encode_jwt(email.to_string()).map_err(|_| {
+                        (StatusCode::INTERNAL_SERVER_ERROR, "Failed to encode token")
+                    })?;
+
+                    Ok(Json(json!({
+                        "status": "success",
+                        "message": "Login successful",
+                        "token": token,
+                        "username":&user.name
+                    })))
+                } else {
+                    Err((StatusCode::UNAUTHORIZED, "Invalid password"))
+                }
+            }
+            Err(_) => Err((
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "Failed to verify password",
+            )),
+        }
     }
 }
