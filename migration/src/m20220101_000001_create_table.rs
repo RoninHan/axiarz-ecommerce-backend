@@ -3,6 +3,7 @@ use sea_orm_migration::{prelude::*, schema::*};
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
+
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
@@ -66,33 +67,37 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(Orders::Id))
                     .col(ColumnDef::new(Orders::UserId).integer().not_null())
                     .col(ColumnDef::new(Orders::TotalPrice).decimal().not_null())
-                    .col(ColumnDef::new(Orders::Status).enumeration(vec![
-                        "pending",
-                        "paid",
-                        "shipped",
-                        "completed",
-                        "canceled",
-                        "refunded",
+                    .col(ColumnDef::new(Orders::Status).enumeration(Orders::Status,vec![
+                        OrdersStatus::Pending,
+                        OrdersStatus::Paid,
+                        OrdersStatus::Shipped,
+                        OrdersStatus::Completed,
+                        OrdersStatus::Canceled,
+                        OrdersStatus::Refunded,
                     ]))
-                    .col(ColumnDef::new(Orders::ShippingStatus).enumeration(vec![
-                        "pending",
-                        "shipped",
-                        "in_transit",
-                        "delivered",
-                        "failed",
+                    .col(ColumnDef::new(Orders::ShippingStatus).enumeration(Orders::ShippingStatus,vec![
+                        ShippingStatus::Pending,
+                                    ShippingStatus::Shipped,
+                                    ShippingStatus::Delivered,
+                                    ShippingStatus::Cancelled,
                     ]))
                     .col(ColumnDef::new(Orders::ShippingCompany).string())
                     .col(ColumnDef::new(Orders::TrackingNumber).string())
                     .col(
                         ColumnDef::new(Orders::PaymentStatus)
-                            .enumeration(vec!["pending", "paid", "failed", "refunded"]),
+                            .enumeration(Orders::PaymentStatus, vec![
+                                PaymentStatus::Pending,
+                                PaymentStatus::Paid,
+                                PaymentStatus::Failed,
+                                PaymentStatus::Refunded,
+                            ]),
                     )
-                    .col(ColumnDef::new(Orders::PaymentMethod).enumeration(vec![
-                        "wechat",
-                        "alipay",
-                        "credit_card",
-                        "paypal",
-                        "bank_transfer",
+                    .col(ColumnDef::new(Orders::PaymentMethod).enumeration(Orders::PaymentMethod, vec![
+                        PaymentMethod::Wechat,
+                        PaymentMethod::Alipay,
+                        PaymentMethod::CreditCard,
+                        PaymentMethod::Paypal,
+                        PaymentMethod::BankTransfer,
                     ]))
                     .col(
                         ColumnDef::new(Orders::CreatedAt)
@@ -119,6 +124,209 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .create_table(
+                Table::create()
+                    .table(OrderItems::Table)
+                    .if_not_exists()
+                    .col(pk_auto(OrderItems::Id))
+                    .col(ColumnDef::new(OrderItems::OrderId).integer().not_null())
+                    .col(ColumnDef::new(OrderItems::ProductId).integer().not_null())
+                    .col(ColumnDef::new(OrderItems::Quantity).integer().not_null())
+                    .col(ColumnDef::new(OrderItems::Price).decimal().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Payments::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Payments::Id))
+                    .col(ColumnDef::new(Payments::OrderId).integer().not_null())
+                    .col(ColumnDef::new(Payments::PaymentMethod).enumeration(Payments::PaymentMethod, vec![
+                        PaymentMethod::Wechat,
+                        PaymentMethod::Alipay,
+                    ]))
+                    .col(ColumnDef::new(Payments::TransactionId).string().not_null())
+                    .col(
+                        ColumnDef::new(Payments::PayStatus)
+                            .enumeration(Payments::PayStatus, vec![
+                                PaymentStatus::Pending,
+                                PaymentStatus::Paid,
+                                PaymentStatus::Failed,
+                                PaymentStatus::Refunded,
+                            ]),
+                    )
+                    .col(ColumnDef::new(Payments::Amount).decimal().not_null())
+                    .col(ColumnDef::new(Payments::PaidAt).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(Payments::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Payments::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(CartItems::Table)
+                    .if_not_exists()
+                    .col(pk_auto(CartItems::Id))
+                    .col(ColumnDef::new(CartItems::UserId).integer().not_null())
+                    .col(ColumnDef::new(CartItems::ProductId).integer().not_null())
+                    .col(ColumnDef::new(CartItems::Quantity).integer().not_null())
+                    .col(
+                        ColumnDef::new(CartItems::AddedAt)
+                            .timestamp_with_time_zone()
+                            .default("CURRENT_TIMESTAMP"),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(ShippingInfo::Table)
+                    .if_not_exists()
+                    .col(pk_auto(ShippingInfo::Id))
+                    .col(ColumnDef::new(ShippingInfo::OrderId).integer().not_null())
+                    .col(ColumnDef::new(ShippingInfo::ShippingCompany).string().not_null())
+                    .col(ColumnDef::new(ShippingInfo::TrackingNumber).string().not_null())
+                    .col(ColumnDef::new(ShippingInfo::ShippingStatus).enumeration(ShippingInfo::ShippingStatus, vec![
+                        ShippingStatus::Pending,
+                        ShippingStatus::Shipped,
+                        ShippingStatus::Delivered,
+                        ShippingStatus::Cancelled,
+                    ]))
+                    .col(ColumnDef::new(ShippingInfo::EstimatedDeliveryDate).date())
+                    .col(ColumnDef::new(ShippingInfo::ShippedAt).timestamp_with_time_zone())
+                    .col(ColumnDef::new(ShippingInfo::DeliveredAt).timestamp_with_time_zone())
+                    .col(
+                        ColumnDef::new(ShippingInfo::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ShippingInfo::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Coupons::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Coupons::Id))
+                    .col(ColumnDef::new(Coupons::Code).string().not_null())
+                    .col(ColumnDef::new(Coupons::Discount).decimal().not_null())
+                    .col(ColumnDef::new(Coupons::ValidFrom).timestamp_with_time_zone())
+                    .col(ColumnDef::new(Coupons::ValidUntil).timestamp_with_time_zone())
+                    .col(ColumnDef::new(Coupons::UsageCount).integer().default("0"))
+                    .col(ColumnDef::new(Coupons::TotalCount).integer().default("0"))
+                    .col(
+                        ColumnDef::new(Coupons::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .default("CURRENT_TIMESTAMP"),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Categories::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Categories::Id))
+                    .col(ColumnDef::new(Categories::Name).string().not_null())
+                    .col(ColumnDef::new(Categories::Description).text())
+                    .col(ColumnDef::new(Categories::ParentId).integer())
+                    .col(
+                        ColumnDef::new(Categories::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .default("CURRENT_TIMESTAMP"),
+                    )
+                    .col(
+                        ColumnDef::new(Categories::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .default("CURRENT_TIMESTAMP"),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(ProductCategories::Table)
+                    .if_not_exists()
+                    .col(ColumnDef::new(ProductCategories::ProductId).integer().not_null())
+                    .col(ColumnDef::new(ProductCategories::CategoryId).integer().not_null())
+                    .primary_key(
+                        Index::create()
+                            .col(ProductCategories::ProductId)
+                            .col(ProductCategories::CategoryId)
+                    )
+                    .to_owned(),
+            )
+            .await?;
+        
+        manager
+            .create_table(
+                Table::create()
+                    .table(Reviews::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Reviews::Id))
+                    .col(ColumnDef::new(Reviews::ProductId).integer().not_null())
+                    .col(ColumnDef::new(Reviews::UserId).integer().not_null())
+                    .col(ColumnDef::new(Reviews::Rating).integer().not_null())
+                    .col(ColumnDef::new(Reviews::Comment).text())
+                    .col(
+                        ColumnDef::new(Reviews::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .default("CURRENT_TIMESTAMP"),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Refunds::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Refunds::Id))
+                    .col(ColumnDef::new(Refunds::PaymentId).integer().not_null())
+                    .col(ColumnDef::new(Refunds::RefundAmount).decimal().not_null())
+                    .col(ColumnDef::new(Refunds::RefundStatus).enumeration(Refunds::RefundStatus, vec![
+                        RefundsStatus::Pending,
+                        RefundsStatus::Processed,
+                        RefundsStatus::Failed,
+                        RefundsStatus::Completed,
+                    ]))
+                    .col(ColumnDef::new(Refunds::RefundReason).string())
+                    .col(ColumnDef::new(Refunds::RefundRequestedAt).timestamp_with_time_zone().default("CURRENT_TIMESTAMP"))
+                    .col(ColumnDef::new(Refunds::RefundProcessedAt).timestamp_with_time_zone())
+                    .to_owned(),
+            )
+            .await?;
+
+        
+
         Ok(())
     }
 
@@ -126,6 +334,50 @@ impl MigrationTrait for Migration {
         // Replace the sample below with your own migration scripts
         manager
             .drop_table(Table::drop().table(Users::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Porducts::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Orders::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(OrderItems::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Payments::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(CartItems::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(ShippingInfo::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Coupons::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Categories::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(ProductCategories::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Reviews::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Refunds::Table).to_owned())
             .await?;
 
         Ok(())
@@ -210,6 +462,42 @@ enum Orders {
     CouponCode,
     GiftCardCode,
     Notes,
+}
+
+#[derive(DeriveIden)]
+enum ShippingStatus {
+    Pending,
+    Shipped,
+    Delivered,
+    Cancelled,
+}
+
+#[derive(DeriveIden)]
+enum PaymentStatus{
+    Pending,
+    Paid,
+    Failed,
+    Refunded,
+}
+
+#[derive(DeriveIden)]
+enum PaymentMethod {
+    Wechat,
+    Alipay,
+    CreditCard,
+    Paypal,
+    BankTransfer,
+    
+}
+
+#[derive(DeriveIden)]
+enum OrdersStatus{
+    Pending,
+    Paid,
+    Shipped,
+    Completed,
+    Canceled,
+    Refunded,
 }
 
 // CREATE TABLE order_items (
@@ -404,4 +692,13 @@ enum Refunds {
     RefundReason,
     RefundRequestedAt,
     RefundProcessedAt,
+}
+
+#[derive(DeriveIden)]
+enum RefundsStatus {
+    Pending,
+    Processed,
+    Failed,
+    Completed,
+    
 }
