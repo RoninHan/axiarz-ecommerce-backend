@@ -1,4 +1,4 @@
-use ::entity::{user, user::Entity as User};
+use ::entity::{users, users::Entity as User};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -27,9 +27,9 @@ impl UserServices {
     pub async fn create_user(
         db: &DbConn,
         form_data: UserModel,
-    ) -> Result<user::ActiveModel, DbErr> {
+    ) -> Result<users::ActiveModel, DbErr> {
         let sex: i32 = form_data.sex.parse().expect("msg");
-        user::ActiveModel {
+        users::ActiveModel {
             name: Set(form_data.name.to_owned()),
             sex: Set(sex),
             email: Set(Some(form_data.email)),
@@ -48,15 +48,15 @@ impl UserServices {
         db: &DbConn,
         id: i32,
         form_data: UserModel,
-    ) -> Result<user::Model, DbErr> {
-        let user: user::ActiveModel = User::find_by_id(id)
+    ) -> Result<users::Model, DbErr> {
+        let users: users::ActiveModel = User::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::Custom("Cannot find user.".to_owned()))
+            .ok_or(DbErr::Custom("Cannot find users.".to_owned()))
             .map(Into::into)?;
         let sex: i32 = form_data.sex.parse().expect("msg");
-        user::ActiveModel {
-            id: user.id,
+        users::ActiveModel {
+            id: users.id,
             name: Set(form_data.name.to_owned()),
             email: Set(Some(form_data.email)),
             password: Set(form_data.password),
@@ -71,13 +71,13 @@ impl UserServices {
     }
 
     pub async fn delete_user(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
-        let user: user::ActiveModel = User::find_by_id(id)
+        let users: users::ActiveModel = User::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::Custom("Cannot find user.".to_owned()))
+            .ok_or(DbErr::Custom("Cannot find users.".to_owned()))
             .map(Into::into)?;
 
-        user.delete(db).await
+        users.delete(db).await
     }
 
     pub async fn delete_all_users(db: &DbConn) -> Result<DeleteResult, DbErr> {
@@ -88,25 +88,25 @@ impl UserServices {
         db: &DbConn,
         page: u64,
         per_page: u64,
-    ) -> Result<(Vec<user::Model>, u64), DbErr> {
+    ) -> Result<(Vec<users::Model>, u64), DbErr> {
         let paginator = User::find()
-            .order_by_asc(user::Column::Id)
+            .order_by_asc(users::Column::Id)
             .paginate(db, per_page);
         let num_pages = paginator.num_pages().await?;
 
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 
-    pub async fn find_user_by_id(db: &DbConn, id: i32) -> Result<Option<user::Model>, DbErr> {
+    pub async fn find_user_by_id(db: &DbConn, id: i32) -> Result<Option<users::Model>, DbErr> {
         User::find_by_id(id).one(db).await
     }
 
     pub async fn find_user_by_email(
         db: &DbConn,
         email: &str,
-    ) -> Result<Option<user::Model>, DbErr> {
+    ) -> Result<Option<users::Model>, DbErr> {
         User::find()
-            .filter(user::Column::Email.contains(email))
+            .filter(users::Column::Email.contains(email))
             .one(db)
             .await
     }

@@ -3,11 +3,9 @@ use sea_orm_migration::{prelude::*, schema::*};
 #[derive(DeriveMigrationName)]
 pub struct Migration;
 
-
 #[async_trait::async_trait]
 impl MigrationTrait for Migration {
     async fn up(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // Replace the sample below with your own migration scripts
         manager
             .create_table(
                 Table::create()
@@ -41,6 +39,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Porducts::Id))
                     .col(ColumnDef::new(Porducts::Name).string().not_null())
+                    .col(ColumnDef::new(Porducts::Status).integer().not_null())
                     .col(ColumnDef::new(Porducts::Description).string())
                     .col(ColumnDef::new(Porducts::StockQuantity).integer().not_null())
                     .col(ColumnDef::new(Porducts::Price).decimal().not_null())
@@ -67,38 +66,12 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(Orders::Id))
                     .col(ColumnDef::new(Orders::UserId).integer().not_null())
                     .col(ColumnDef::new(Orders::TotalPrice).decimal().not_null())
-                    .col(ColumnDef::new(Orders::Status).enumeration(Orders::Status,vec![
-                        OrdersStatus::Pending,
-                        OrdersStatus::Paid,
-                        OrdersStatus::Shipped,
-                        OrdersStatus::Completed,
-                        OrdersStatus::Canceled,
-                        OrdersStatus::Refunded,
-                    ]))
-                    .col(ColumnDef::new(Orders::ShippingStatus).enumeration(Orders::ShippingStatus,vec![
-                        ShippingStatus::Pending,
-                                    ShippingStatus::Shipped,
-                                    ShippingStatus::Delivered,
-                                    ShippingStatus::Cancelled,
-                    ]))
+                    .col(ColumnDef::new(Orders::Status).integer().not_null())
+                    .col(ColumnDef::new(Orders::ShippingStatus).integer().not_null())
                     .col(ColumnDef::new(Orders::ShippingCompany).string())
                     .col(ColumnDef::new(Orders::TrackingNumber).string())
-                    .col(
-                        ColumnDef::new(Orders::PaymentStatus)
-                            .enumeration(Orders::PaymentStatus, vec![
-                                PaymentStatus::Pending,
-                                PaymentStatus::Paid,
-                                PaymentStatus::Failed,
-                                PaymentStatus::Refunded,
-                            ]),
-                    )
-                    .col(ColumnDef::new(Orders::PaymentMethod).enumeration(Orders::PaymentMethod, vec![
-                        PaymentMethod::Wechat,
-                        PaymentMethod::Alipay,
-                        PaymentMethod::CreditCard,
-                        PaymentMethod::Paypal,
-                        PaymentMethod::BankTransfer,
-                    ]))
+                    .col(ColumnDef::new(Orders::PaymentStatus).integer().not_null())
+                    .col(ColumnDef::new(Orders::PaymentMethod).integer().not_null())
                     .col(
                         ColumnDef::new(Orders::CreatedAt)
                             .timestamp_with_time_zone()
@@ -145,20 +118,9 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Payments::Id))
                     .col(ColumnDef::new(Payments::OrderId).integer().not_null())
-                    .col(ColumnDef::new(Payments::PaymentMethod).enumeration(Payments::PaymentMethod, vec![
-                        PaymentMethod::Wechat,
-                        PaymentMethod::Alipay,
-                    ]))
+                    .col(ColumnDef::new(Payments::PaymentMethod).integer().not_null())
                     .col(ColumnDef::new(Payments::TransactionId).string().not_null())
-                    .col(
-                        ColumnDef::new(Payments::PayStatus)
-                            .enumeration(Payments::PayStatus, vec![
-                                PaymentStatus::Pending,
-                                PaymentStatus::Paid,
-                                PaymentStatus::Failed,
-                                PaymentStatus::Refunded,
-                            ]),
-                    )
+                    .col(ColumnDef::new(Payments::PayStatus).integer().not_null())
                     .col(ColumnDef::new(Payments::Amount).decimal().not_null())
                     .col(ColumnDef::new(Payments::PaidAt).timestamp_with_time_zone())
                     .col(
@@ -184,11 +146,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(CartItems::UserId).integer().not_null())
                     .col(ColumnDef::new(CartItems::ProductId).integer().not_null())
                     .col(ColumnDef::new(CartItems::Quantity).integer().not_null())
-                    .col(
-                        ColumnDef::new(CartItems::AddedAt)
-                            .timestamp_with_time_zone()
-                            .default("CURRENT_TIMESTAMP"),
-                    )
+                    .col(ColumnDef::new(CartItems::AddedAt).timestamp_with_time_zone())
                     .to_owned(),
             )
             .await?;
@@ -200,14 +158,21 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(ShippingInfo::Id))
                     .col(ColumnDef::new(ShippingInfo::OrderId).integer().not_null())
-                    .col(ColumnDef::new(ShippingInfo::ShippingCompany).string().not_null())
-                    .col(ColumnDef::new(ShippingInfo::TrackingNumber).string().not_null())
-                    .col(ColumnDef::new(ShippingInfo::ShippingStatus).enumeration(ShippingInfo::ShippingStatus, vec![
-                        ShippingStatus::Pending,
-                        ShippingStatus::Shipped,
-                        ShippingStatus::Delivered,
-                        ShippingStatus::Cancelled,
-                    ]))
+                    .col(
+                        ColumnDef::new(ShippingInfo::ShippingCompany)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ShippingInfo::TrackingNumber)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ShippingInfo::ShippingStatus)
+                            .integer()
+                            .not_null(),
+                    )
                     .col(ColumnDef::new(ShippingInfo::EstimatedDeliveryDate).date())
                     .col(ColumnDef::new(ShippingInfo::ShippedAt).timestamp_with_time_zone())
                     .col(ColumnDef::new(ShippingInfo::DeliveredAt).timestamp_with_time_zone())
@@ -237,11 +202,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Coupons::ValidUntil).timestamp_with_time_zone())
                     .col(ColumnDef::new(Coupons::UsageCount).integer().default("0"))
                     .col(ColumnDef::new(Coupons::TotalCount).integer().default("0"))
-                    .col(
-                        ColumnDef::new(Coupons::CreatedAt)
-                            .timestamp_with_time_zone()
-                            .default("CURRENT_TIMESTAMP"),
-                    )
+                    .col(ColumnDef::new(Coupons::CreatedAt).timestamp_with_time_zone())
                     .to_owned(),
             )
             .await?;
@@ -255,16 +216,8 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Categories::Name).string().not_null())
                     .col(ColumnDef::new(Categories::Description).text())
                     .col(ColumnDef::new(Categories::ParentId).integer())
-                    .col(
-                        ColumnDef::new(Categories::CreatedAt)
-                            .timestamp_with_time_zone()
-                            .default("CURRENT_TIMESTAMP"),
-                    )
-                    .col(
-                        ColumnDef::new(Categories::UpdatedAt)
-                            .timestamp_with_time_zone()
-                            .default("CURRENT_TIMESTAMP"),
-                    )
+                    .col(ColumnDef::new(Categories::CreatedAt).timestamp_with_time_zone())
+                    .col(ColumnDef::new(Categories::UpdatedAt).timestamp_with_time_zone())
                     .to_owned(),
             )
             .await?;
@@ -274,17 +227,25 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ProductCategories::Table)
                     .if_not_exists()
-                    .col(ColumnDef::new(ProductCategories::ProductId).integer().not_null())
-                    .col(ColumnDef::new(ProductCategories::CategoryId).integer().not_null())
+                    .col(
+                        ColumnDef::new(ProductCategories::ProductId)
+                            .integer()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ProductCategories::CategoryId)
+                            .integer()
+                            .not_null(),
+                    )
                     .primary_key(
                         Index::create()
                             .col(ProductCategories::ProductId)
-                            .col(ProductCategories::CategoryId)
+                            .col(ProductCategories::CategoryId),
                     )
                     .to_owned(),
             )
             .await?;
-        
+
         manager
             .create_table(
                 Table::create()
@@ -295,11 +256,7 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Reviews::UserId).integer().not_null())
                     .col(ColumnDef::new(Reviews::Rating).integer().not_null())
                     .col(ColumnDef::new(Reviews::Comment).text())
-                    .col(
-                        ColumnDef::new(Reviews::CreatedAt)
-                            .timestamp_with_time_zone()
-                            .default("CURRENT_TIMESTAMP"),
-                    )
+                    .col(ColumnDef::new(Reviews::CreatedAt).timestamp_with_time_zone())
                     .to_owned(),
             )
             .await?;
@@ -312,26 +269,18 @@ impl MigrationTrait for Migration {
                     .col(pk_auto(Refunds::Id))
                     .col(ColumnDef::new(Refunds::PaymentId).integer().not_null())
                     .col(ColumnDef::new(Refunds::RefundAmount).decimal().not_null())
-                    .col(ColumnDef::new(Refunds::RefundStatus).enumeration(Refunds::RefundStatus, vec![
-                        RefundsStatus::Pending,
-                        RefundsStatus::Processed,
-                        RefundsStatus::Failed,
-                        RefundsStatus::Completed,
-                    ]))
+                    .col(ColumnDef::new(Refunds::RefundStatus).integer().not_null())
                     .col(ColumnDef::new(Refunds::RefundReason).string())
-                    .col(ColumnDef::new(Refunds::RefundRequestedAt).timestamp_with_time_zone().default("CURRENT_TIMESTAMP"))
+                    .col(ColumnDef::new(Refunds::RefundRequestedAt).timestamp_with_time_zone())
                     .col(ColumnDef::new(Refunds::RefundProcessedAt).timestamp_with_time_zone())
                     .to_owned(),
             )
             .await?;
 
-        
-
         Ok(())
     }
 
     async fn down(&self, manager: &SchemaManager) -> Result<(), DbErr> {
-        // Replace the sample below with your own migration scripts
         manager
             .drop_table(Table::drop().table(Users::Table).to_owned())
             .await?;
@@ -403,6 +352,7 @@ enum Porducts {
     Table,
     Id,
     Name,
+    Status,
     Description,
     StockQuantity,
     Price,
@@ -473,7 +423,7 @@ enum ShippingStatus {
 }
 
 #[derive(DeriveIden)]
-enum PaymentStatus{
+enum PaymentStatus {
     Pending,
     Paid,
     Failed,
@@ -487,11 +437,10 @@ enum PaymentMethod {
     CreditCard,
     Paypal,
     BankTransfer,
-    
 }
 
 #[derive(DeriveIden)]
-enum OrdersStatus{
+enum OrdersStatus {
     Pending,
     Paid,
     Shipped,
@@ -700,5 +649,4 @@ enum RefundsStatus {
     Processed,
     Failed,
     Completed,
-    
 }

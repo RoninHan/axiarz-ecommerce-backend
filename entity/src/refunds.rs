@@ -4,14 +4,16 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
-#[sea_orm(table_name = "friends")]
+#[sea_orm(table_name = "refunds")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub user_id: i32,
-    pub friend_user_id: i32,
-    pub created_at: DateTimeWithTimeZone,
-    pub updated_at: DateTimeWithTimeZone,
+    pub payment_id: i32,
+    pub refund_amount: Decimal,
+    pub refund_status: i32,
+    pub refund_reason: Option<String>,
+    pub refund_requested_at: Option<DateTimeWithTimeZone>,
+    pub refund_processed_at: Option<DateTimeWithTimeZone>,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
