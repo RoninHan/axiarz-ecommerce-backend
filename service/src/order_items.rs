@@ -1,4 +1,4 @@
-use ::Entity::{order_items, order_items::Entity as OrderItem};
+use ::entity::{order_items, order_items::Entity as OrderItem};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -9,7 +9,7 @@ pub struct OrderItemModel {
     pub order_id: i32,
     pub product_id: i32,
     pub quantity: i32,
-    pub price: Decimal,
+    pub price: prelude::Decimal,
 }
 
 pub struct OrderItemServices;
@@ -24,8 +24,6 @@ impl OrderItemServices {
             product_id: Set(form_data.product_id),
             quantity: Set(form_data.quantity),
             price: Set(form_data.price),
-            created_at: Set(DateTimeWithTimeZone::from(Utc::now())),
-            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
         }
         .save(db)
@@ -50,16 +48,18 @@ impl OrderItemServices {
             price: Set(form_data.price),
             ..order_items
         }
-        .save(db)
+        .update(db)
         .await
     }
 
-    pub async fn delete_order_item_by_id(db: &DbConn, id: i32) -> Result<(), DbErr> {
-        OrderItem::delete()
-            .filter(order_items::Column::Id.eq(id))
-            .exec(db)
-            .await?;
-        Ok(())
+    pub async fn delete_order_item_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
+        let order_items: order_items::ActiveModel = OrderItem::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find order_items.".to_owned()))
+            .map(Into::into)?;
+
+        order_items.delete(db).await
     }
 
     pub async fn get_order_items_by_order_id(
@@ -73,7 +73,10 @@ impl OrderItemServices {
     }
 
     pub async fn get_order_item_by_id(db: &DbConn, id: i32) -> Result<order_items::Model, DbErr> {
-        OrderItem::find_by_id(id).one(db).await
+        OrderItem::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find order_items.".to_owned()))
     }
 
     pub async fn get_order_items(db: &DbConn) -> Result<Vec<order_items::Model>, DbErr> {

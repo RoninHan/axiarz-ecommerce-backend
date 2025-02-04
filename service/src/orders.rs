@@ -1,4 +1,4 @@
-use ::Entity::{orders, orders::Entity as Order};
+use ::entity::{orders, orders::Entity as Order};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -7,8 +7,19 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct OrderModel {
     pub user_id: i32,
-    pub total: i32,
-    pub status: String,
+    pub total_price: prelude::Decimal,
+    pub status: i32,
+    pub shipping_status: i32,
+    pub shipping_company: Option<String>,
+    pub tracking_number: Option<String>,
+    pub payment_status: i32,
+    pub payment_method: i32,
+    pub shipping_address: String,
+    pub billing_address: String,
+    pub discount: Option<prelude::Decimal>,
+    pub coupon_code: Option<String>,
+    pub gift_card_code: Option<String>,
+    pub notes: Option<String>,
 }
 
 pub struct OrderServices;
@@ -20,8 +31,19 @@ impl OrderServices {
     ) -> Result<orders::ActiveModel, DbErr> {
         orders::ActiveModel {
             user_id: Set(form_data.user_id),
-            total: Set(form_data.total),
+            total_price: Set(form_data.total_price),
             status: Set(form_data.status.to_owned()),
+            shipping_status: Set(form_data.shipping_status),
+            shipping_company: Set(form_data.shipping_company.to_owned()),
+            tracking_number: Set(form_data.tracking_number.to_owned()),
+            payment_status: Set(form_data.payment_status),
+            payment_method: Set(form_data.payment_method),
+            shipping_address: Set(form_data.shipping_address.to_owned()),
+            billing_address: Set(form_data.billing_address.to_owned()),
+            discount: Set(form_data.discount),
+            coupon_code: Set(form_data.coupon_code.to_owned()),
+            gift_card_code: Set(form_data.gift_card_code.to_owned()),
+            notes: Set(form_data.notes.to_owned()),
             created_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
@@ -43,20 +65,34 @@ impl OrderServices {
         orders::ActiveModel {
             id: orders.id,
             user_id: Set(form_data.user_id),
-            total: Set(form_data.total),
+            total_price: Set(form_data.total_price.to_owned()),
             status: Set(form_data.status.to_owned()),
-            ..orders
+            shipping_status: Set(form_data.shipping_status),
+            shipping_company: Set(form_data.shipping_company.to_owned()),
+            tracking_number: Set(form_data.tracking_number.to_owned()),
+            payment_status: Set(form_data.payment_status),
+            payment_method: Set(form_data.payment_method),
+            shipping_address: Set(form_data.shipping_address.to_owned()),
+            billing_address: Set(form_data.billing_address.to_owned()),
+            discount: Set(form_data.discount),
+            coupon_code: Set(form_data.coupon_code.to_owned()),
+            gift_card_code: Set(form_data.gift_card_code.to_owned()),
+            notes: Set(form_data.notes.to_owned()),
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
         }
-        .save(db)
+        .update(db)
         .await
     }
 
-    pub async fn delete_order_by_id(db: &DbConn, id: i32) -> Result<(), DbErr> {
-        Order::delete()
-            .filter(orders::Column::Id.eq(id))
-            .exec(db)
-            .await?;
-        Ok(())
+    pub async fn delete_order_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
+        let orders: orders::ActiveModel = Order::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find orders.".to_owned()))
+            .map(Into::into)?;
+
+        orders.delete(db).await
     }
 
     pub async fn get_orders_by_user_id(
@@ -70,25 +106,24 @@ impl OrderServices {
     }
 
     pub async fn get_order_by_id(db: &DbConn, id: i32) -> Result<orders::Model, DbErr> {
-        Order::find_by_id(id).one(db).await
-    }
-
-    pub async fn get_order_items_by_order_id(
-        db: &DbConn,
-        order_id: i32,
-    ) -> Result<Vec<order_items::Model>, DbErr> {
-        OrderItem::find()
-            .filter(order_items::Column::OrderId.eq(order_id))
-            .all(db)
-            .await
+        Order::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find order.".to_owned()))
     }
 
     // 分页
     pub async fn get_orders(
         db: &DbConn,
-        page: i32,
-        limit: i32,
-    ) -> Result<Vec<orders::Model>, DbErr> {
-        Order::find().paginate(page).per_page(limit).all(db).await
+        page: u64,
+        limit: u64,
+    ) -> Result<(Vec<orders::Model>, u64), DbErr> {
+        let paginator = Order::find()
+            .order_by_asc(orders::Column::Id)
+            .paginate(db, limit);
+
+        let num_pages = paginator.num_pages().await?;
+
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 }

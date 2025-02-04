@@ -1,4 +1,4 @@
-use ::Entity::{payments, payments::Entity as Payment};
+use ::entity::{payments, payments::Entity as Payment};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -10,7 +10,7 @@ pub struct PaymentModel {
     pub payment_method: i32,
     pub transaction_id: String,
     pub pay_status: i32,
-    pub amount: Decimal,
+    pub amount: prelude::Decimal,
     pub paid_at: Option<DateTimeWithTimeZone>,
 }
 
@@ -54,18 +54,21 @@ impl PaymentServices {
             pay_status: Set(form_data.pay_status),
             amount: Set(form_data.amount),
             paid_at: Set(form_data.paid_at),
-            ..payments
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
         }
-        .save(db)
+        .update(db)
         .await
     }
 
-    pub async fn delete_payment_by_id(db: &DbConn, id: i32) -> Result<(), DbErr> {
-        Payment::delete()
-            .filter(payments::Column::Id.eq(id))
-            .exec(db)
-            .await?;
-        Ok(())
+    pub async fn delete_payment_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
+        let payments: payments::ActiveModel = Payment::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find payments.".to_owned()))
+            .map(Into::into)?;
+
+        payments.delete(db).await
     }
 
     pub async fn get_payments_by_order_id(
@@ -79,15 +82,23 @@ impl PaymentServices {
     }
 
     pub async fn get_payment_by_id(db: &DbConn, id: i32) -> Result<payments::Model, DbErr> {
-        Payment::find_by_id(id).one(db).await
+        Payment::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find payment.".to_owned()))
     }
 
     // 分页查询
     pub async fn get_payments(
         db: &DbConn,
-        page: i32,
-        size: i32,
-    ) -> Result<Vec<payments::Model>, DbErr> {
-        Payment::find().paginate(page, size).all(db).await
+        page: u64,
+        size: u64,
+    ) -> Result<(Vec<payments::Model>, u64), DbErr> {
+        let paginator = Payment::find()
+            .order_by_asc(payments::Column::Id)
+            .paginate(db, size);
+        let num_pages = paginator.num_pages().await?;
+
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 }

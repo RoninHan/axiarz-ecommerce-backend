@@ -1,31 +1,33 @@
-use ::Entity::{products, products::Entity as Product};
+use ::entity::{porducts, porducts::Entity as Product};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
-pub struct ProductModel {
+pub struct PorductModel {
     pub name: String,
-    pub price: i32,
-    pub description: String,
-    pub image: String,
-    pub category: String,
+    pub status: i32,
+    pub description: Option<String>,
+    pub stock_quantity: i32,
+    pub price: prelude::Decimal,
+    pub image_url: Option<String>,
 }
 
-pub struct ProductServices;
+pub struct PorductServices;
 
-impl ProductServices {
-    pub async fn create_product(
+impl PorductServices {
+    pub async fn create_porduct(
         db: &DbConn,
-        form_data: ProductModel,
-    ) -> Result<products::ActiveModel, DbErr> {
-        products::ActiveModel {
+        form_data: PorductModel,
+    ) -> Result<porducts::ActiveModel, DbErr> {
+        porducts::ActiveModel {
             name: Set(form_data.name.to_owned()),
-            price: Set(form_data.price),
+            status: Set(form_data.status),
             description: Set(form_data.description.to_owned()),
-            image: Set(form_data.image.to_owned()),
-            category: Set(form_data.category.to_owned()),
+            stock_quantity: Set(form_data.stock_quantity),
+            price: Set(form_data.price),
+            image_url: Set(form_data.image_url.to_owned()),
             created_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
@@ -34,62 +36,62 @@ impl ProductServices {
         .await
     }
 
-    pub async fn update_product_by_id(
+    pub async fn update_porduct_by_id(
         db: &DbConn,
         id: i32,
-        form_data: ProductModel,
-    ) -> Result<products::Model, DbErr> {
-        let products: products::ActiveModel = Product::find_by_id(id)
+        form_data: PorductModel,
+    ) -> Result<porducts::Model, DbErr> {
+        let porducts: porducts::ActiveModel = Product::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::Custom("Cannot find products.".to_owned()))
+            .ok_or(DbErr::Custom("Cannot find porducts.".to_owned()))
             .map(Into::into)?;
-        products::ActiveModel {
-            id: products.id,
+        porducts::ActiveModel {
+            id: porducts.id,
             name: Set(form_data.name.to_owned()),
-            price: Set(form_data.price),
+            status: Set(form_data.status),
             description: Set(form_data.description.to_owned()),
-            image: Set(form_data.image.to_owned()),
-            category: Set(form_data.category.to_owned()),
-            ..products
+            stock_quantity: Set(form_data.stock_quantity),
+            price: Set(form_data.price),
+            image_url: Set(form_data.image_url.to_owned()),
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
         }
-        .save(db)
+        .update(db)
         .await
     }
 
-    pub async fn delete_product_by_id(db: &DbConn, id: i32) -> Result<(), DbErr> {
-        Product::delete()
-            .filter(products::Column::Id.eq(id))
-            .exec(db)
-            .await?;
-        Ok(())
-    }
-
-    pub async fn get_all_products(db: &DbConn) -> Result<Vec<products::Model>, DbErr> {
-        let products: Vec<products::Model> = Product::find().all(db).await?;
-        Ok(products)
-    }
-
-    pub async fn get_product_by_id(db: &DbConn, id: i32) -> Result<products::Model, DbErr> {
-        let product: products::Model = Product::find_by_id(id)
+    pub async fn delete_porduct_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
+        let porducts: porducts::ActiveModel = Product::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::Custom("Cannot find product.".to_owned()))?;
-        Ok(product)
+            .ok_or(DbErr::Custom("Cannot find porducts.".to_owned()))
+            .map(Into::into)?;
+        porducts.delete(db).await
     }
 
-    // 查詢分頁，根據name查詢
-    pub async fn get_products_by_name(
+    pub async fn get_porducts(db: &DbConn) -> Result<Vec<porducts::Model>, DbErr> {
+        Product::find().all(db).await
+    }
+
+    // fenye
+    pub async fn get_porducts_by_page(
         db: &DbConn,
-        name: String,
-        page: i64,
-        limit: i64,
-    ) -> Result<Vec<products::Model>, DbErr> {
-        let products: Vec<products::Model> = Product::find()
-            .filter(products::Column::Name.contains(name))
-            .paginate(page, limit)
-            .all(db)
-            .await?;
-        Ok(products)
+        page: u64,
+        size: u64,
+    ) -> Result<(Vec<porducts::Model>, u64), DbErr> {
+        let paginator = Product::find()
+            .order_by_asc(porducts::Column::Id)
+            .paginate(db, size);
+        let num_pages = paginator.num_pages().await?;
+
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
+    }
+
+    pub async fn get_porduct_by_id(db: &DbConn, id: i32) -> Result<porducts::Model, DbErr> {
+        Product::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find porduct.".to_owned()))
     }
 }

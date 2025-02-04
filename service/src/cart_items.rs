@@ -1,4 +1,4 @@
-use ::Entity::{cart_items, cart_items::Entity as CartItem};
+use ::entity::{cart_items, cart_items::Entity as CartItem};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -22,7 +22,7 @@ impl CartItemServices {
             user_id: Set(form_data.user_id),
             product_id: Set(form_data.product_id),
             quantity: Set(form_data.quantity),
-            added_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            added_at: Set(Some(DateTimeWithTimeZone::from(Utc::now()))),
             ..Default::default()
         }
         .save(db)
@@ -44,18 +44,20 @@ impl CartItemServices {
             user_id: Set(form_data.user_id),
             product_id: Set(form_data.product_id),
             quantity: Set(form_data.quantity),
-            ..cart_items
+            ..Default::default()
         }
-        .save(db)
+        .update(db)
         .await
     }
 
-    pub async fn delete_cart_item_by_id(db: &DbConn, id: i32) -> Result<(), DbErr> {
-        CartItem::delete()
-            .filter(cart_items::Column::Id.eq(id))
-            .exec(db)
-            .await?;
-        Ok(())
+    pub async fn delete_cart_item_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
+        let cart_items: cart_items::ActiveModel = CartItem::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find cart_items.".to_owned()))
+            .map(Into::into)?;
+
+        cart_items.delete(db).await
     }
 
     pub async fn get_cart_items_by_user_id(
