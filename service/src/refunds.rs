@@ -1,4 +1,4 @@
-use ::Entity::{refunds, refunds::Entity as Refund};
+use ::entity::{refunds, refunds::Entity as Refund};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct RefundModel {
     pub payment_id: i32,
-    pub refund_amount: f64,
+    pub refund_amount: prelude::Decimal,
     pub refund_status: i32,
     pub refund_reason: Option<String>,
     pub refund_requested_at: Option<DateTimeWithTimeZone>,
@@ -28,8 +28,6 @@ impl RefundServices {
             refund_reason: Set(form_data.refund_reason),
             refund_requested_at: Set(form_data.refund_requested_at),
             refund_processed_at: Set(form_data.refund_processed_at),
-            created_at: Set(DateTimeWithTimeZone::from(Utc::now())),
-            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
         }
         .save(db)
@@ -54,17 +52,18 @@ impl RefundServices {
             refund_reason: Set(form_data.refund_reason),
             refund_requested_at: Set(form_data.refund_requested_at),
             refund_processed_at: Set(form_data.refund_processed_at),
-            ..refunds
         }
-        .save(db)
+        .update(db)
         .await
     }
 
     pub async fn delete_refund_by_id(db: &DbConn, id: i32) -> Result<(), DbErr> {
-        Refund::delete()
-            .filter(refunds::Column::Id.eq(id))
-            .exec(db)
-            .await?;
+        let refunds: refunds::ActiveModel = Refund::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find refunds.".to_owned()))
+            .map(Into::into)?;
+        refunds.delete(db).await?;
         Ok(())
     }
 
@@ -79,7 +78,10 @@ impl RefundServices {
     }
 
     pub async fn get_refund_by_id(db: &DbConn, id: i32) -> Result<refunds::Model, DbErr> {
-        Refund::find_by_id(id).one(db).await
+        Refund::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find refund.".to_owned()))
     }
 
     pub async fn get_all_refunds(db: &DbConn) -> Result<Vec<refunds::Model>, DbErr> {
@@ -90,10 +92,14 @@ impl RefundServices {
     // 分頁
     pub async fn get_refunds_by_page(
         db: &DbConn,
-        page: i32,
-        size: i32,
-    ) -> Result<Vec<refunds::Model>, DbErr> {
-        let refunds: Vec<refunds::Model> = Refund::find().paginate(page, size).all(db).await?;
-        Ok(refunds)
+        page: u64,
+        size: u64,
+    ) -> Result<(Vec<refunds::Model>, u64), DbErr> {
+        let paginator = Refund::find()
+            .order_by_asc(refunds::Column::Id)
+            .paginate(db, size);
+        let num_pages = paginator.num_pages().await?;
+
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 }
