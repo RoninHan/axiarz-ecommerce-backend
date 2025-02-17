@@ -64,4 +64,17 @@ impl CategoryServices {
     pub async fn get_categories(db: &DbConn) -> Result<Vec<categories::Model>, DbErr> {
         Category::find().all(db).await
     }
+
+    pub async fn get_categories_by_page(
+        db: &DbConn,
+        page: u64,
+        size: u64,
+    ) -> Result<(Vec<categories::Model>, u64), DbErr> {
+        let paginator = Category::find()
+            .order_by_asc(categories::Column::Id)
+            .paginate(db, size);
+        let num_pages = paginator.num_pages().await?;
+
+        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
+    }
 }

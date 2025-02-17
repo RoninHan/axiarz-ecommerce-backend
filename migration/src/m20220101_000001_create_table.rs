@@ -35,22 +35,22 @@ impl MigrationTrait for Migration {
         manager
             .create_table(
                 Table::create()
-                    .table(Porducts::Table)
+                    .table(Products::Table)
                     .if_not_exists()
-                    .col(pk_auto(Porducts::Id))
-                    .col(ColumnDef::new(Porducts::Name).string().not_null())
-                    .col(ColumnDef::new(Porducts::Status).integer().not_null())
-                    .col(ColumnDef::new(Porducts::Description).string())
-                    .col(ColumnDef::new(Porducts::StockQuantity).integer().not_null())
-                    .col(ColumnDef::new(Porducts::Price).decimal().not_null())
-                    .col(ColumnDef::new(Porducts::ImageUrl).string())
+                    .col(pk_auto(Products::Id))
+                    .col(ColumnDef::new(Products::Name).string().not_null())
+                    .col(ColumnDef::new(Products::Status).integer().not_null())
+                    .col(ColumnDef::new(Products::Description).string())
+                    .col(ColumnDef::new(Products::StockQuantity).integer().not_null())
+                    .col(ColumnDef::new(Products::Price).decimal().not_null())
+                    .col(ColumnDef::new(Products::ImageUrl).string())
                     .col(
-                        ColumnDef::new(Porducts::CreatedAt)
+                        ColumnDef::new(Products::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(Porducts::UpdatedAt)
+                        ColumnDef::new(Products::UpdatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
@@ -286,7 +286,7 @@ impl MigrationTrait for Migration {
             .await?;
 
         manager
-            .drop_table(Table::drop().table(Porducts::Table).to_owned())
+            .drop_table(Table::drop().table(Products::Table).to_owned())
             .await?;
 
         manager
@@ -348,7 +348,7 @@ enum Users {
 }
 
 #[derive(DeriveIden)]
-enum Porducts {
+enum Products {
     Table,
     Id,
     Name,
@@ -412,41 +412,6 @@ enum Orders {
     CouponCode,
     GiftCardCode,
     Notes,
-}
-
-#[derive(DeriveIden)]
-enum ShippingStatus {
-    Pending,
-    Shipped,
-    Delivered,
-    Cancelled,
-}
-
-#[derive(DeriveIden)]
-enum PaymentStatus {
-    Pending,
-    Paid,
-    Failed,
-    Refunded,
-}
-
-#[derive(DeriveIden)]
-enum PaymentMethod {
-    Wechat,
-    Alipay,
-    CreditCard,
-    Paypal,
-    BankTransfer,
-}
-
-#[derive(DeriveIden)]
-enum OrdersStatus {
-    Pending,
-    Paid,
-    Shipped,
-    Completed,
-    Canceled,
-    Refunded,
 }
 
 // CREATE TABLE order_items (
@@ -641,12 +606,4 @@ enum Refunds {
     RefundReason,
     RefundRequestedAt,
     RefundProcessedAt,
-}
-
-#[derive(DeriveIden)]
-enum RefundsStatus {
-    Pending,
-    Processed,
-    Failed,
-    Completed,
 }

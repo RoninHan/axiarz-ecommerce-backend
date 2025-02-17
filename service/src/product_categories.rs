@@ -58,9 +58,54 @@ impl ProductCategoryServices {
         Ok(())
     }
 
+    pub async fn update_product_category_by_product_id(
+        db: &DbConn,
+        product_id: i32,
+        form_data: ProductCategoryModel,
+    ) -> Result<(), DbErr> {
+        // 查找第一个 product_id 对应的 product_category
+        let product_categories = ProductCategory::find()
+            .filter(product_categories::Column::ProductId.eq(product_id))
+            .all(db)
+            .await?;
+
+        if product_categories.is_empty() {
+            return Err(DbErr::Custom("Cannot find product categories.".to_owned()));
+        }
+
+        product_categories::ActiveModel {
+            category_id: Set(form_data.category_id),
+            ..Default::default()
+        }
+        .update(db)
+        .await?;
+
+        Ok(())
+    }
+
     pub async fn get_all_product_categories(
         db: &DbConn,
     ) -> Result<Vec<product_categories::Model>, DbErr> {
         ProductCategory::find().all(db).await
+    }
+
+    pub async fn find_by_category_id(
+        db: &DbConn,
+        category_id: i32,
+    ) -> Result<Vec<product_categories::Model>, DbErr> {
+        ProductCategory::find()
+            .filter(product_categories::Column::CategoryId.eq(category_id))
+            .all(db)
+            .await
+    }
+
+    pub async fn find_by_product_id(
+        db: &DbConn,
+        product_id: i32,
+    ) -> Result<Vec<product_categories::Model>, DbErr> {
+        ProductCategory::find()
+            .filter(product_categories::Column::ProductId.eq(product_id))
+            .all(db)
+            .await
     }
 }

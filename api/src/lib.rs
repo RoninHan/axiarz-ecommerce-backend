@@ -10,6 +10,7 @@ use axum::{
     Router,
 };
 
+use controller::category::CategoriesController;
 use middleware::auth::Auth;
 use migration::{Migrator, MigratorTrait};
 use service::sea_orm::Database;
@@ -19,6 +20,7 @@ use tera::Tera;
 use tower_cookies::CookieManagerLayer;
 use tower_http::services::ServeDir;
 
+use crate::controller::porduct::PorductController;
 use crate::controller::user::UserController;
 
 use tools::AppState;
@@ -80,6 +82,29 @@ async fn start() -> anyhow::Result<()> {
                 state.clone(),
                 Auth::authorization_middleware,
             )),
+        )
+        .route("/product/get", get(PorductController::list_porducts))
+        .route("/product/create", post(PorductController::create_porduct))
+        .route(
+            "/product/update/:id",
+            post(PorductController::update_porduct),
+        )
+        .route(
+            "/product/delete/:id",
+            delete(PorductController::delete_porduct),
+        )
+        .route("/category/get", get(CategoriesController::list_categories))
+        .route(
+            "/category/create",
+            post(CategoriesController::create_category),
+        )
+        .route(
+            "/category/update/:id",
+            post(CategoriesController::update_category),
+        )
+        .route(
+            "/category/delete/:id",
+            delete(CategoriesController::delete_category),
         )
         .nest_service(
             "/static",
