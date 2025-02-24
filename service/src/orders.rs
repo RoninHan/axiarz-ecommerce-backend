@@ -126,4 +126,102 @@ impl OrderServices {
 
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
+
+    // 设置支付状态
+    pub async fn set_payment_status(
+        db: &DbConn,
+        id: i32,
+        payment_status: i32,
+    ) -> Result<orders::Model, DbErr> {
+        let orders: orders::ActiveModel = Order::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find orders.".to_owned()))
+            .map(Into::into)?;
+
+        orders::ActiveModel {
+            id: orders.id,
+            payment_status: Set(payment_status),
+            paid_at: Set(Some(DateTimeWithTimeZone::from(Utc::now()))),
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
+        }
+        .update(db)
+        .await
+    }
+
+    // 设置支付方式
+    pub async fn set_payment_method(
+        db: &DbConn,
+        id: i32,
+        payment_method: i32,
+    ) -> Result<orders::Model, DbErr> {
+        let orders: orders::ActiveModel = Order::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find orders.".to_owned()))
+            .map(Into::into)?;
+
+        orders::ActiveModel {
+            id: orders.id,
+            payment_method: Set(payment_method),
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
+        }
+        .update(db)
+        .await
+    }
+
+    // 设置物流信息
+    pub async fn set_shipping_status(
+        db: &DbConn,
+        id: i32,
+        shipping_company: String,
+        tracking_number: String,
+    ) -> Result<orders::Model, DbErr> {
+        let orders: orders::ActiveModel = Order::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find orders.".to_owned()))
+            .map(Into::into)?;
+
+        orders::ActiveModel {
+            id: orders.id,
+            shipping_status: Set(1),
+            shipping_company: Set(Some(shipping_company)),
+            tracking_number: Set(Some(tracking_number)),
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
+        }
+        .update(db)
+        .await
+    }
+
+    // 设置订单状态
+    // 'pending'   // 待处理
+    // 'paid'      // 已付款
+    // 'shipped'   // 已发货
+    // 'completed' // 已完成
+    // 'canceled'  // 已取消
+    // 'refunded'  // 已退款
+    pub async fn set_order_status(
+        db: &DbConn,
+        id: i32,
+        status: i32,
+    ) -> Result<orders::Model, DbErr> {
+        let orders: orders::ActiveModel = Order::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find orders.".to_owned()))
+            .map(Into::into)?;
+
+        orders::ActiveModel {
+            id: orders.id,
+            status: Set(status),
+            updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
+            ..Default::default()
+        }
+        .update(db)
+        .await
+    }
 }

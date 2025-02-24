@@ -29,4 +29,5 @@ pub enum ResponseStatus {
 pub struct ResponseData<T> {
     pub status: ResponseStatus,
     pub data: T,
+    pub page: u64,
 }
