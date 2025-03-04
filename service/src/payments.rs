@@ -2,8 +2,17 @@ use ::entity::{payments, payments::Entity as Payment};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
+
 use serde::{Deserialize, Serialize};
 
+#[derive(Debug, serde::Deserialize)]
+pub struct RequestCreatePaymentBody {
+    pub order_id: i32,
+    pub payment_method: i32,
+    pub amount: i32,
+    pub description: String,
+    pub open_id: String,
+}
 #[derive(Deserialize, Serialize, Debug)]
 pub struct PaymentModel {
     pub order_id: i32,

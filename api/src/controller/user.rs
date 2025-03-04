@@ -28,8 +28,12 @@ impl UserController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: users,
-            page: num_pages,
+            data: {
+                json!({
+                    "users": users,
+                    "num_pages": num_pages,
+                })
+            },
         };
 
         let json_data = to_value(data).unwrap();

@@ -7,13 +7,15 @@ use axum::{
     response::Json,
     Extension,
 };
-use entity::users::Model as UserModel;
+use entity::{order_items, shipping_info, users::Model as UserModel};
 use serde_json::json;
 use serde_json::to_value;
-use service::{sea_orm::prelude::Decimal, OrderModel, OrderServices};
+use service::{
+    sea_orm::prelude::Decimal, OrderItemModel, OrderItemServices, OrderModel, OrderServices,
+};
 
 #[derive(serde::Deserialize, Debug)]
-struct RequestData {
+pub struct RequestData {
     total_price: Decimal,
     coupon_code: Option<String>,
     gift_card_code: Option<String>,
@@ -30,11 +32,15 @@ struct RequestData {
 }
 
 #[derive(serde::Deserialize, Debug)]
-struct RequestUpdateParams {
-    status: i32,
-    shipping_status: i32,
+pub struct RequestPaymentStatusParams {
     payment_status: i32,
 }
+
+#[derive(serde::Deserialize)]
+pub struct RequestOrderStatusParams {
+    order_status: i32,
+}
+
 pub struct OrderController;
 
 impl OrderController {
@@ -52,8 +58,12 @@ impl OrderController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: orders,
-            page: num_pages,
+            data: {
+                json!({
+                    "orders": orders,
+                    "num_pages": num_pages,
+                })
+            },
         };
 
         let json_data = to_value(data).unwrap();
@@ -80,11 +90,33 @@ impl OrderController {
             billing_address: payload.billing_address.clone(),
             payment_status: 0,
             payment_method: payload.payment_method.clone(),
-            shipping_company: todo!(),
+            shipping_company: Some(payload.shipping_company.clone()),
             discount: payload.discount,
-            tracking_number: todo!(),
+            tracking_number: Some(payload.tracking_number.clone()),
         };
-        OrderServices::create_order(&state.conn, order_data);
+        let order = OrderServices::create_order(&state.conn, order_data)
+            .await
+            .map_err(|e| {
+                println!("Failed to create order: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create order")
+            })?;
+
+        let form_data = OrderItemModel {
+            order_id: order.id.unwrap(),
+            product_id: payload.product_id.unwrap(),
+            quantity: payload.quantity.unwrap(),
+            price: payload.price.unwrap(),
+        };
+
+        OrderItemServices::create_order_item(&state.conn, form_data)
+            .await
+            .map_err(|e| {
+                println!("Failed to create order item: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to create order item",
+                )
+            })?;
 
         Ok(Json(json!({
             "status": "success",
@@ -95,9 +127,9 @@ impl OrderController {
     pub async fn set_payment_status(
         state: State<AppState>,
         Path(id): Path<i32>,
-        payment_status: i32,
+        Json(payload): Json<RequestPaymentStatusParams>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        OrderServices::set_payment_status(&state.conn, id, payment_status)
+        OrderServices::set_payment_status(&state.conn, id, payload.payment_status.clone())
             .await
             .map_err(|e| {
                 println!("Failed to update porduct: {:?}", e);
@@ -116,9 +148,9 @@ impl OrderController {
     pub async fn update_order_status(
         state: State<AppState>,
         Path(id): Path<i32>,
-        order_status: i32,
+        Json(payload): Json<RequestOrderStatusParams>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        OrderServices::set_order_status(&state.conn, id, order_status)
+        OrderServices::set_order_status(&state.conn, id, payload.order_status.clone())
             .await
             .map_err(|e| {
                 println!("Failed to update porduct: {:?}", e);
