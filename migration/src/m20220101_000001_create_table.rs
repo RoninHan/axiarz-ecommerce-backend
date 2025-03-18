@@ -277,6 +277,21 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager.
+            create_table(
+                Table::create()
+                    .table(Banner::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Banner::Id))
+                    .col(ColumnDef::new(Banner::Title).string().not_null())
+                    .col(ColumnDef::new(Banner::ImageUrl).string().not_null())
+                    .col(ColumnDef::new(Banner::Link).string().not_null())
+                    .col(ColumnDef::new(Banner::CreatedAt).timestamp_with_time_zone().not_null())
+                    .col(ColumnDef::new(Banner::UpdatedAt).timestamp_with_time_zone().not_null())
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 
@@ -327,6 +342,10 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_table(Table::drop().table(Refunds::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Banner::Table).to_owned())
             .await?;
 
         Ok(())
@@ -606,4 +625,15 @@ enum Refunds {
     RefundReason,
     RefundRequestedAt,
     RefundProcessedAt,
+}
+
+#[derive(DeriveIden)]
+enum Banner {
+    Table,
+    Id,
+    Title,
+    ImageUrl,
+    Link,
+    CreatedAt,
+    UpdatedAt,
 }

@@ -1,4 +1,3 @@
-use std::result;
 
 use crate::tools::{AppState, Params, ResponseData, ResponseStatus};
 use axum::{
@@ -7,7 +6,6 @@ use axum::{
     response::Json,
 };
 
-use entity::categories;
 use service::{
     sea_orm::prelude::Decimal, PorductModel, PorductServices, ProductCategoryModel,
     ProductCategoryServices,

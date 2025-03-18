@@ -3,3 +3,4 @@ pub(crate) mod order;
 pub(crate) mod payment;
 pub(crate) mod porduct;
 pub(crate) mod user;
+pub(crate) mod banner;

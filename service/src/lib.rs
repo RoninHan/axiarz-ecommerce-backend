@@ -9,6 +9,8 @@ mod product_categories;
 mod refunds;
 mod reviews;
 mod user;
+mod shipping_info;
+mod banner;
 
 pub use cart_items::*;
 pub use categories::*;
@@ -21,5 +23,7 @@ pub use product_categories::*;
 pub use refunds::*;
 pub use reviews::*;
 pub use user::*;
+pub use shipping_info::*;
+pub use banner::*;
 
 pub use sea_orm;

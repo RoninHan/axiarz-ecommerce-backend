@@ -10,7 +10,7 @@ use axum::{
     Router,
 };
 
-use controller::{category::CategoriesController, order::OrderController};
+use controller::{banner::BannerController, category::CategoriesController, order::OrderController};
 use middleware::auth::Auth;
 use migration::{Migrator, MigratorTrait};
 use service::sea_orm::Database;
@@ -118,6 +118,16 @@ async fn start() -> anyhow::Result<()> {
         .route(
             "/order/cancel_order/:id",
             post(OrderController::cancel_order),
+        )
+        .route("/banner/all", get(BannerController::list_banners_all))
+        .route("/banner/create", post(BannerController::create_banner))
+        .route(
+            "/banner/update/:id",
+            post(BannerController::update_banner),
+        )
+        .route(
+            "/banner/delete/:id",
+            delete(BannerController::delete_banner),
         )
         .nest_service(
             "/static",

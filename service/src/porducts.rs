@@ -1,4 +1,4 @@
-use ::entity::{porducts, porducts::Entity as Product};
+use ::entity::{products, products::Entity as Product};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -20,8 +20,8 @@ impl PorductServices {
     pub async fn create_porduct(
         db: &DbConn,
         form_data: PorductModel,
-    ) -> Result<porducts::ActiveModel, DbErr> {
-        porducts::ActiveModel {
+    ) -> Result<products::ActiveModel, DbErr> {
+        products::ActiveModel {
             name: Set(form_data.name.to_owned()),
             status: Set(form_data.status),
             description: Set(form_data.description.to_owned()),
@@ -40,14 +40,14 @@ impl PorductServices {
         db: &DbConn,
         id: i32,
         form_data: PorductModel,
-    ) -> Result<porducts::Model, DbErr> {
-        let porducts: porducts::ActiveModel = Product::find_by_id(id)
+    ) -> Result<products::Model, DbErr> {
+        let products: products::ActiveModel = Product::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::Custom("Cannot find porducts.".to_owned()))
+            .ok_or(DbErr::Custom("Cannot find products.".to_owned()))
             .map(Into::into)?;
-        porducts::ActiveModel {
-            id: porducts.id,
+        products::ActiveModel {
+            id: products.id,
             name: Set(form_data.name.to_owned()),
             status: Set(form_data.status),
             description: Set(form_data.description.to_owned()),
@@ -62,15 +62,15 @@ impl PorductServices {
     }
 
     pub async fn delete_porduct_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
-        let porducts: porducts::ActiveModel = Product::find_by_id(id)
+        let products: products::ActiveModel = Product::find_by_id(id)
             .one(db)
             .await?
-            .ok_or(DbErr::Custom("Cannot find porducts.".to_owned()))
+            .ok_or(DbErr::Custom("Cannot find products.".to_owned()))
             .map(Into::into)?;
-        porducts.delete(db).await
+        products.delete(db).await
     }
 
-    pub async fn get_porducts(db: &DbConn) -> Result<Vec<porducts::Model>, DbErr> {
+    pub async fn get_porducts(db: &DbConn) -> Result<Vec<products::Model>, DbErr> {
         Product::find().all(db).await
     }
 
@@ -79,16 +79,16 @@ impl PorductServices {
         db: &DbConn,
         page: u64,
         size: u64,
-    ) -> Result<(Vec<porducts::Model>, u64), DbErr> {
+    ) -> Result<(Vec<products::Model>, u64), DbErr> {
         let paginator = Product::find()
-            .order_by_asc(porducts::Column::Id)
+            .order_by_asc(products::Column::Id)
             .paginate(db, size);
         let num_pages = paginator.num_pages().await?;
 
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
     }
 
-    pub async fn get_porduct_by_id(db: &DbConn, id: i32) -> Result<porducts::Model, DbErr> {
+    pub async fn get_porduct_by_id(db: &DbConn, id: i32) -> Result<products::Model, DbErr> {
         Product::find_by_id(id)
             .one(db)
             .await?

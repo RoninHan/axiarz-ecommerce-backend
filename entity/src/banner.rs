@@ -4,17 +4,13 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
-#[sea_orm(table_name = "shipping_info")]
+#[sea_orm(table_name = "banner")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub order_id: i32,
-    pub shipping_company: String,
-    pub tracking_number: String,
-    pub shipping_status: i32,
-    pub estimated_delivery_date: Option<DateTimeWithTimeZone>,
-    pub shipped_at: Option<DateTimeWithTimeZone>,
-    pub delivered_at: Option<DateTimeWithTimeZone>,
+    pub title: String,
+    pub image_url: String,
+    pub link: String,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
 }
