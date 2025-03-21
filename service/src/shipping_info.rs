@@ -75,8 +75,8 @@ impl ShippingInfoServices {
             .ok_or(DbErr::Custom("Cannot find shipping_info.".to_owned()))
             .map(Into::into)?;
 
-            shipping_info.delete(db).await?;
-            Ok(())
+        shipping_info.delete(db).await?;
+        Ok(())
     }
 
     pub async fn get_shipping_info_by_order_id(
@@ -100,20 +100,18 @@ impl ShippingInfoServices {
     }
 
     // 分頁
-    pub async fn get_shipping_info_by_order_id_page(
+    pub async fn get_shipping_info_page(
         db: &DbConn,
-        order_id: i32,
         page: u64,
         page_size: u64,
     ) -> Result<(Vec<shipping_info::Model>, u64), DbErr> {
-        let paginator=ShippingInfo::find()
-        .order_by_asc(shipping_info::Column::Id)
-        .paginate(db, page_size);
+        let paginator = ShippingInfo::find()
+            .order_by_asc(shipping_info::Column::Id)
+            .paginate(db, page_size);
 
         let num_pages = paginator.num_pages().await?;
 
         paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
-
     }
 
     pub async fn get_all_shipping_info(db: &DbConn) -> Result<Vec<shipping_info::Model>, DbErr> {
