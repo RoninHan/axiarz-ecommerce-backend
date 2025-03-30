@@ -122,8 +122,7 @@ impl BannerController {
 
         Ok(Json(json!({
             "status": "success",
-            "message": "Banner created successfully",
-            "image_path": image_path
+            "message": "Banner created successfully"
         })))
     }
 
