@@ -277,8 +277,8 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
-        manager.
-            create_table(
+        manager
+            .create_table(
                 Table::create()
                     .table(Banner::Table)
                     .if_not_exists()
@@ -286,8 +286,108 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Banner::Title).string().not_null())
                     .col(ColumnDef::new(Banner::ImageUrl).string().not_null())
                     .col(ColumnDef::new(Banner::Link).string().not_null())
-                    .col(ColumnDef::new(Banner::CreatedAt).timestamp_with_time_zone().not_null())
-                    .col(ColumnDef::new(Banner::UpdatedAt).timestamp_with_time_zone().not_null())
+                    .col(
+                        ColumnDef::new(Banner::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Banner::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(Address::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Address::Id))
+                    .col(ColumnDef::new(Address::UserId).integer().not_null())
+                    .col(ColumnDef::new(Address::Phone).string().not_null())
+                    .col(ColumnDef::new(Address::Province).string().not_null())
+                    .col(ColumnDef::new(Address::City).string().not_null())
+                    .col(ColumnDef::new(Address::District).string().not_null())
+                    .col(ColumnDef::new(Address::Detail).string().not_null())
+                    .col(ColumnDef::new(Address::PostalCode).string().not_null())
+                    .col(
+                        ColumnDef::new(Address::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Address::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(ProductSearch::Table)
+                    .if_not_exists()
+                    .col(pk_auto(ProductSearch::Id))
+                    .col(ColumnDef::new(ProductSearch::Keyword).string().not_null())
+                    .col(
+                        ColumnDef::new(ProductSearch::SearchCount)
+                            .string()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ProductSearch::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(ProductSearch::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(SearchHistory::Table)
+                    .if_not_exists()
+                    .col(pk_auto(SearchHistory::Id))
+                    .col(ColumnDef::new(SearchHistory::UserId).integer().not_null())
+                    .col(ColumnDef::new(SearchHistory::Keyword).decimal().not_null())
+                    .col(
+                        ColumnDef::new(SearchHistory::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
+        manager
+            .create_table(
+                Table::create()
+                    .table(HotSearch::Table)
+                    .if_not_exists()
+                    .col(pk_auto(HotSearch::Id))
+                    .col(ColumnDef::new(HotSearch::Keyword).string().not_null())
+                    .col(ColumnDef::new(HotSearch::Rank).integer().not_null())
+                    .col(
+                        ColumnDef::new(HotSearch::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(HotSearch::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
                     .to_owned(),
             )
             .await?;
@@ -346,6 +446,22 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_table(Table::drop().table(Banner::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Address::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(ProductSearch::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(SearchHistory::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(HotSearch::Table).to_owned())
             .await?;
 
         Ok(())
@@ -634,6 +750,50 @@ enum Banner {
     Title,
     ImageUrl,
     Link,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum Address {
+    Table,
+    Id,
+    UserId,
+    Phone,
+    Province,
+    City,
+    District,
+    Detail,
+    PostalCode,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum ProductSearch {
+    Table,
+    Id,
+    Keyword,
+    SearchCount,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum SearchHistory {
+    Table,
+    Id,
+    UserId,
+    Keyword,
+    CreatedAt,
+}
+
+#[derive(DeriveIden)]
+enum HotSearch {
+    Table,
+    Id,
+    Keyword,
+    Rank,
     CreatedAt,
     UpdatedAt,
 }
