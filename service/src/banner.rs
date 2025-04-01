@@ -40,6 +40,7 @@ impl BannerServices {
             .await?
             .ok_or(DbErr::Custom("Cannot find banner.".to_owned()))
             .map(Into::into)?;
+
         banner::ActiveModel {
             id: banner.id,
             title: Set(form_data.title.to_owned()),
@@ -65,5 +66,12 @@ impl BannerServices {
 
     pub async fn get_banner_all(db: &DbConn) -> Result<Vec<banner::Model>, DbErr> {
         BannerEntity::find().all(db).await
+    }
+
+    pub async fn get_banner_by_id(db: &DbConn, id: i32) -> Result<banner::Model, DbErr> {
+        BannerEntity::find_by_id(id)
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find banner.".to_owned()))
     }
 }
