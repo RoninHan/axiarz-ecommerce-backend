@@ -1,7 +1,8 @@
+use std::{fs, str::FromStr};
 
 use crate::tools::{AppState, Params, ResponseData, ResponseStatus};
 use axum::{
-    extract::{Path, Query, State},
+    extract::{Multipart, Path, Query, State},
     http::StatusCode,
     response::Json,
 };
@@ -93,15 +94,111 @@ impl PorductController {
 
     pub async fn create_porduct(
         state: State<AppState>,
-        Json(payload): Json<PostProductModal>,
+        mut multipart: Multipart,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let mut product_name = None;
+        let mut status = None;
+        let mut description = None;
+        let mut stock_quantity = None;
+        let mut price = None;
+        let mut image_url = None;
+        let mut category_id = None;
+
+        while let Some(field) = multipart.next_field().await.map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                "Failed to process multipart form data",
+            )
+        })? {
+            let name = field.name().unwrap_or("").to_string();
+            if name == "name" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read name field from form data",
+                    )
+                })?;
+                product_name = Some(data);
+            } else if name == "status" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read status field from form data",
+                    )
+                })?;
+                status = Some(data);
+            } else if name == "description" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read description field from form data",
+                    )
+                })?;
+                description = Some(data);
+            } else if name == "stock_quantity" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read stock_quantity field from form data",
+                    )
+                })?;
+                stock_quantity = Some(data);
+            } else if name == "price" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read price field from form data",
+                    )
+                })?;
+                price = Some(data);
+            } else if name == "image" {
+                // 提取圖片文件
+                let file_name = field.file_name().unwrap_or("default.png").to_string();
+                let file_data = field
+                    .bytes()
+                    .await
+                    .map_err(|_| (StatusCode::BAD_REQUEST, "Failed to read image file"))?;
+
+                // 确保目标目录存在
+                let upload_dir = "./uploads";
+                if !std::path::Path::new(upload_dir).exists() {
+                    std::fs::create_dir_all(upload_dir).map_err(|e| {
+                        eprintln!("Failed to create upload directory: {:?}", e); // 打印具体的错误信息
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "Failed to create upload directory",
+                        )
+                    })?;
+                }
+
+                // 保存图片到服务器
+                let file_path = format!("{}/{}", upload_dir, file_name);
+                fs::write(&file_path, &file_data).map_err(|e| {
+                    eprintln!("Failed to save image file: {:?}", e); // 打印具体的错误信息
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Failed to save image file",
+                    )
+                })?;
+                image_url = Some(file_path);
+            } else if name == "category_id" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read category_id field from form data",
+                    )
+                })?;
+                category_id = Some(data);
+            }
+        }
+
         let product_data = PorductModel {
-            name: payload.name.clone(),
-            status: payload.status,
-            description: payload.description.clone(),
-            stock_quantity: payload.stock_quantity,
-            price: payload.price,
-            image_url: payload.image_url.clone(),
+            name: product_name.unwrap(),
+            status: status.unwrap().parse().unwrap(),
+            description: description,
+            stock_quantity: stock_quantity.unwrap().parse().unwrap(),
+            price: Decimal::from_str(price.as_ref().unwrap()).unwrap(),
+            image_url: image_url,
         };
         let product_res = PorductServices::create_porduct(&state.conn, product_data)
             .await
@@ -115,7 +212,7 @@ impl PorductController {
 
         let product_cate_data = ProductCategoryModel {
             product_id: product_res.id.unwrap(),
-            category_id: payload.category_id,
+            category_id: category_id.unwrap().parse().unwrap(),
         };
 
         let _ =
@@ -130,8 +227,104 @@ impl PorductController {
     pub async fn update_porduct(
         state: State<AppState>,
         Path(id): Path<i32>,
-        Json(payload): Json<PostProductModal>,
+        mut multipart: Multipart,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let mut product_name = None;
+        let mut status = None;
+        let mut description = None;
+        let mut stock_quantity = None;
+        let mut price = None;
+        let mut image_url = None;
+        let mut category_id = None;
+
+        while let Some(field) = multipart.next_field().await.map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                "Failed to process multipart form data",
+            )
+        })? {
+            let name = field.name().unwrap_or("").to_string();
+            if name == "name" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read name field from form data",
+                    )
+                })?;
+                product_name = Some(data);
+            } else if name == "status" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read status field from form data",
+                    )
+                })?;
+                status = Some(data);
+            } else if name == "description" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read description field from form data",
+                    )
+                })?;
+                description = Some(data);
+            } else if name == "stock_quantity" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read stock_quantity field from form data",
+                    )
+                })?;
+                stock_quantity = Some(data);
+            } else if name == "price" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read price field from form data",
+                    )
+                })?;
+                price = Some(data);
+            } else if name == "image" {
+                // 提取圖片文件
+                let file_name = field.file_name().unwrap_or("default.png").to_string();
+                let file_data = field
+                    .bytes()
+                    .await
+                    .map_err(|_| (StatusCode::BAD_REQUEST, "Failed to read image file"))?;
+
+                // 确保目标目录存在
+                let upload_dir = "./uploads";
+                if !std::path::Path::new(upload_dir).exists() {
+                    std::fs::create_dir_all(upload_dir).map_err(|e| {
+                        eprintln!("Failed to create upload directory: {:?}", e); // 打印具体的错误信息
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "Failed to create upload directory",
+                        )
+                    })?;
+                }
+
+                // 保存图片到服务器
+                let file_path = format!("{}/{}", upload_dir, file_name);
+                fs::write(&file_path, &file_data).map_err(|e| {
+                    eprintln!("Failed to save image file: {:?}", e); // 打印具体的错误信息
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Failed to save image file",
+                    )
+                })?;
+                image_url = Some(file_path);
+            } else if name == "category_id" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read category_id field from form data",
+                    )
+                })?;
+                category_id = Some(data);
+            }
+        }
+
         let porduct = PorductServices::get_porduct_by_id(&state.conn, id)
             .await
             .map_err(|e| {
@@ -140,12 +333,19 @@ impl PorductController {
             })?;
 
         let product_data = PorductModel {
-            name: payload.name.clone(),
-            status: payload.status,
-            description: payload.description.clone(),
-            stock_quantity: payload.stock_quantity,
-            price: payload.price,
-            image_url: payload.image_url.clone(),
+            name: product_name.unwrap_or(porduct.name),
+            status: status
+                .unwrap_or(porduct.status.to_string())
+                .parse()
+                .unwrap(),
+            description: description.or(porduct.description),
+            stock_quantity: stock_quantity
+                .unwrap_or(porduct.stock_quantity.to_string())
+                .parse()
+                .unwrap(),
+            price: Decimal::from_str(&price.unwrap_or(porduct.price.to_string()).to_string())
+                .unwrap(),
+            image_url: image_url.or(porduct.image_url),
         };
         PorductServices::update_porduct_by_id(&state.conn, id, product_data)
             .await
@@ -159,7 +359,7 @@ impl PorductController {
 
         let product_cate_data = ProductCategoryModel {
             product_id: id,
-            category_id: payload.category_id,
+            category_id: category_id.unwrap().parse().unwrap(),
         };
 
         let _ = ProductCategoryServices::update_product_category_by_product_id(
