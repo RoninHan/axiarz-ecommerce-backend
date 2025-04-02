@@ -30,7 +30,7 @@ impl UserController {
             status: ResponseStatus::Success,
             data: {
                 json!({
-                    "users": users,
+                    "rows": users,
                     "num_pages": num_pages,
                 })
             },
@@ -46,6 +46,13 @@ impl UserController {
         Json(payload): Json<UserModel>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
         println!("Payload: {:?}", payload);
+        // password md5
+        let payload = UserModel {
+            password: Auth::hash_password(&payload.password).map_err(|_| {
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password")
+            })?,
+            ..payload
+        };
         UserServices::create_user(&state.conn, payload)
             .await
             .map_err(|e| {
