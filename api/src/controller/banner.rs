@@ -97,7 +97,7 @@ impl BannerController {
                         "Failed to save image file",
                     )
                 })?;
-                image_path = Some(file_path);
+                image_path = Some(file_path.replace("./", "/"));
                 println!("Image path: {:?}", image_path);
             }
         }
@@ -185,7 +185,7 @@ impl BannerController {
                         "Failed to save image file",
                     )
                 })?;
-                image_path = Some(file_path);
+                image_path = Some(file_path.replace("./", "/"));
             }
         }
 
@@ -203,7 +203,7 @@ impl BannerController {
                 println!("Failed to get banner: {:?}", e);
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get banner")
             })?;
-        
+
         if title.is_none() {
             title = Some(banner.title);
         }
@@ -213,7 +213,7 @@ impl BannerController {
         if image_path.is_none() {
             image_path = Some(banner.image_url);
         }
-        
+
         let payload = BannerModel {
             title: title.unwrap_or_default(),
             link: link.unwrap_or_default(),

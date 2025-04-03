@@ -4,7 +4,7 @@ mod middleware;
 mod tools;
 
 use axum::{
-    http::StatusCode,
+    http::{Method, StatusCode},
     middleware as axum_middleware,
     routing::{delete, get, get_service, post},
     Router,
@@ -20,6 +20,7 @@ use service::sea_orm::Database;
 use std::env;
 use tera::Tera;
 use tower_cookies::CookieManagerLayer;
+use tower_http::cors::{Any, CorsLayer};
 use tower_http::services::ServeDir;
 
 use crate::controller::cart::CartController;
@@ -36,6 +37,10 @@ async fn start() -> anyhow::Result<()> {
     // 设置日志级别
     env::set_var("RUST_LOG", "debug");
     tracing_subscriber::fmt::init();
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // 允许所有来源，生产环境建议指定具体来源
+        .allow_methods([Method::GET, Method::POST, Method::DELETE]) // 允许的 HTTP 方法
+        .allow_headers(Any); // 允许所有请求头
 
     // 加载环境变量
     dotenvy::dotenv().ok();
@@ -63,105 +68,120 @@ async fn start() -> anyhow::Result<()> {
         .route("/api/login", post(UserController::login))
         // 用户管理相关路由
         .route(
-            "/user",
+            "/api/user",
             get(UserController::list_users).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/user/:id",
+            "/api/user/:id",
             get(UserController::get_user_by_id).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/user/new",
+            "/api/user/new",
             post(UserController::create_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/user/update/:id",
+            "/api/user/update/:id",
             post(UserController::update_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/user/delete/:id",
+            "/api/user/delete/:id",
             delete(UserController::delete_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         // 商品管理相关路由
-        .route("/product/get", get(PorductController::list_porducts))
-        .route("/product/create", post(PorductController::create_porduct))
+        .route("/api/product/get", get(PorductController::list_porducts))
         .route(
-            "/product/update/:id",
+            "/api/product/create",
+            post(PorductController::create_porduct),
+        )
+        .route(
+            "/api/product/update/:id",
             post(PorductController::update_porduct),
         )
         .route(
-            "/product/delete/:id",
+            "/api/product/delete/:id",
             delete(PorductController::delete_porduct),
         )
         // 分类管理相关路由
-        .route("/category/get", get(CategoriesController::list_categories))
         .route(
-            "/category/create",
+            "/api/category/get",
+            get(CategoriesController::list_categories),
+        )
+        .route(
+            "/api/category/create",
             post(CategoriesController::create_category),
         )
         .route(
-            "/category/update/:id",
+            "/api/category/update/:id",
             post(CategoriesController::update_category),
         )
         .route(
-            "/category/delete/:id",
+            "/api/category/delete/:id",
             delete(CategoriesController::delete_category),
         )
         // 订单管理相关路由
-        .route("/order/create", post(OrderController::create_order))
+        .route("/api/order/create", post(OrderController::create_order))
         .route(
-            "/order/update_status/:id",
+            "/api/order/update_status/:id",
             post(OrderController::update_order_status),
         )
         .route(
-            "/order/set_payment/:id",
+            "/api/order/set_payment/:id",
             post(OrderController::set_payment_status),
         )
         .route(
-            "/order/cancel_order/:id",
+            "/api/order/cancel_order/:id",
             post(OrderController::cancel_order),
         )
         // 轮播图管理相关路由
-        .route("/banner/all", get(BannerController::list_banners_all))
-        .route("/banner/create", post(BannerController::create_banner))
-        .route("/banner/update/:id", post(BannerController::update_banner))
+        .route("/api/banner/all", get(BannerController::list_banners_all))
+        .route("/api/banner/create", post(BannerController::create_banner))
         .route(
-            "/banner/delete/:id",
+            "/api/banner/update/:id",
+            post(BannerController::update_banner),
+        )
+        .route(
+            "/api/banner/delete/:id",
             delete(BannerController::delete_banner),
         )
         // 购物车管理相关路由
-        .route("/cart/get", get(CartController::list_cart_items))
-        .route("/cart/create", post(CartController::create_cart_item))
-        .route("/cart/update/:id", post(CartController::update_cart_item))
-        .route("/cart/delete/:id", delete(CartController::delete_cart_item))
-        // 评论管理相关路由
-        .route("/review/get", get(ReviewController::list_reviews))
-        .route("/review/create", post(ReviewController::create_review))
+        .route("/api/cart/get", get(CartController::list_cart_items))
+        .route("/api/cart/create", post(CartController::create_cart_item))
         .route(
-            "/review/update/:id",
+            "/api/cart/update/:id",
+            post(CartController::update_cart_item),
+        )
+        .route(
+            "/api/cart/delete/:id",
+            delete(CartController::delete_cart_item),
+        )
+        // 评论管理相关路由
+        .route("/api/review/get", get(ReviewController::list_reviews))
+        .route("/api/review/create", post(ReviewController::create_review))
+        .route(
+            "/api/review/update/:id",
             post(ReviewController::update_review_by_id),
         )
         .route(
-            "/review/delete/:id",
+            "/api/review/delete/:id",
             delete(ReviewController::delete_review_by_id),
         )
         .route(
-            "/review/get_reviews_by_product_id/:id",
+            "/api/review/get_reviews_by_product_id/:id",
             get(ReviewController::get_reviews_by_product_id),
         )
         // 静态文件服务
@@ -178,6 +198,16 @@ async fn start() -> anyhow::Result<()> {
                 )
             }),
         )
+        .nest_service(
+            "/uploads",
+            get_service(ServeDir::new("./uploads")).handle_error(|error| async move {
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    format!("Unhandled internal error: {error}"),
+                )
+            }),
+        )
+        .layer(cors) // 添加 CORS 中间件
         .layer(CookieManagerLayer::new())
         .with_state(state);
 

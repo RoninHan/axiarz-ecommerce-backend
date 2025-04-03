@@ -1,4 +1,4 @@
-use ::entity::{banner,banner::Entity as BannerEntity};
+use ::entity::{banner, banner::Entity as BannerEntity};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;

@@ -81,7 +81,7 @@ impl PorductController {
             status: ResponseStatus::Success,
             data: {
                 json!({
-                    "porducts": porducts,
+                    "data": porducts,
                     "num_pages": num_pages,
                 })
             },
