@@ -1,7 +1,7 @@
 use ::entity::{product_categories, product_categories::Entity as ProductCategory};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
-use sea_orm::*;
+use sea_orm::{metric::Info, *};
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
@@ -64,16 +64,15 @@ impl ProductCategoryServices {
         form_data: ProductCategoryModel,
     ) -> Result<(), DbErr> {
         // 查找第一个 product_id 对应的 product_category
-        let product_categories = ProductCategory::find()
+        let product_categories: product_categories::ActiveModel = ProductCategory::find()
             .filter(product_categories::Column::ProductId.eq(product_id))
-            .all(db)
-            .await?;
-
-        if product_categories.is_empty() {
-            return Err(DbErr::Custom("Cannot find product categories.".to_owned()));
-        }
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find product categories.".to_owned()))
+            .map(|info| info.into())?;
 
         product_categories::ActiveModel {
+            id: product_categories.id,
             category_id: Set(form_data.category_id),
             ..Default::default()
         }

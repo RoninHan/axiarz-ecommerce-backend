@@ -227,6 +227,7 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(ProductCategories::Table)
                     .if_not_exists()
+                    .col(pk_auto(ProductCategories::Id))
                     .col(
                         ColumnDef::new(ProductCategories::ProductId)
                             .integer()
@@ -236,11 +237,6 @@ impl MigrationTrait for Migration {
                         ColumnDef::new(ProductCategories::CategoryId)
                             .integer()
                             .not_null(),
-                    )
-                    .primary_key(
-                        Index::create()
-                            .col(ProductCategories::ProductId)
-                            .col(ProductCategories::CategoryId),
                     )
                     .to_owned(),
             )
@@ -392,6 +388,31 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        manager
+            .create_table(
+                Table::create()
+                    .table(HomePageProductType::Table)
+                    .if_not_exists()
+                    .col(pk_auto(HomePageProductType::Id))
+                    .col(
+                        ColumnDef::new(HomePageProductType::ProductTypeId)
+                            .integer()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Payments::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Payments::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 
@@ -462,6 +483,10 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_table(Table::drop().table(HotSearch::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(HomePageProductType::Table).to_owned())
             .await?;
 
         Ok(())
@@ -695,6 +720,7 @@ enum Categories {
 #[derive(DeriveIden)]
 enum ProductCategories {
     Table,
+    Id,
     ProductId,
     CategoryId,
 }
@@ -794,6 +820,16 @@ enum HotSearch {
     Id,
     Keyword,
     Rank,
+    CreatedAt,
+    UpdatedAt,
+}
+
+// 用来设置哪些产品类型放首页
+#[derive(DeriveIden)]
+enum HomePageProductType {
+    Table,
+    Id,
+    ProductTypeId,
     CreatedAt,
     UpdatedAt,
 }

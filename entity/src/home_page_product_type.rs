@@ -4,14 +4,13 @@ use sea_orm::entity::prelude::*;
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone, Debug, PartialEq, DeriveEntityModel, Eq, Deserialize, Serialize)]
-#[sea_orm(table_name = "cart_items")]
+#[sea_orm(table_name = "home_page_product_type")]
 pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
-    pub user_id: i32,
-    pub product_id: i32,
-    pub quantity: i32,
-    pub added_at: Option<DateTimeWithTimeZone>,
+    pub product_type_id: i32,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]

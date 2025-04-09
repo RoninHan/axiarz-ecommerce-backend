@@ -1,15 +1,20 @@
 pub mod prelude;
 
+pub mod address;
+pub mod banner;
 pub mod cart_items;
 pub mod categories;
 pub mod coupons;
+pub mod home_page_product_type;
+pub mod hot_search;
 pub mod order_items;
 pub mod orders;
 pub mod payments;
-pub mod products;
 pub mod product_categories;
+pub mod product_search;
+pub mod products;
 pub mod refunds;
 pub mod reviews;
+pub mod search_history;
 pub mod shipping_info;
 pub mod users;
-pub mod banner;
