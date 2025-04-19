@@ -75,7 +75,7 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/user/:id",
+            "/api/user/{id}",
             get(UserController::get_user_by_id).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
@@ -89,14 +89,14 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/user/update/:id",
+            "/api/user/update/{id}",
             post(UserController::update_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/api/user/delete/:id",
+            "/api/user/delete/{id}",
             delete(UserController::delete_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
@@ -109,12 +109,24 @@ async fn start() -> anyhow::Result<()> {
             post(PorductController::create_porduct),
         )
         .route(
-            "/api/product/update/:id",
+            "/api/product/update/{id}",
             post(PorductController::update_porduct),
         )
         .route(
-            "/api/product/delete/:id",
+            "/api/product/delete/{id}",
             delete(PorductController::delete_porduct),
+        )
+        .route(
+            "/api/product/home",
+            get(PorductController::get_product_by_home_product_type),
+        )
+        .route(
+            "/api/product/add_home_product",
+            post(PorductController::create_home_product),
+        )
+        .route(
+            "/api/product/delete_home_product/{id}",
+            delete(PorductController::delete_home_product),
         )
         // 分类管理相关路由
         .route(
@@ -126,62 +138,63 @@ async fn start() -> anyhow::Result<()> {
             post(CategoriesController::create_category),
         )
         .route(
-            "/api/category/update/:id",
+            "/api/category/update/{id}",
             post(CategoriesController::update_category),
         )
         .route(
-            "/api/category/delete/:id",
+            "/api/category/delete/{id}",
             delete(CategoriesController::delete_category),
         )
         // 订单管理相关路由
+        .route("/api/order/list", get(OrderController::list_orders))
         .route("/api/order/create", post(OrderController::create_order))
         .route(
-            "/api/order/update_status/:id",
+            "/api/order/update_status/{id}",
             post(OrderController::update_order_status),
         )
         .route(
-            "/api/order/set_payment/:id",
+            "/api/order/set_payment/{id}",
             post(OrderController::set_payment_status),
         )
         .route(
-            "/api/order/cancel_order/:id",
+            "/api/order/cancel_order/{id}",
             post(OrderController::cancel_order),
         )
         // 轮播图管理相关路由
         .route("/api/banner/all", get(BannerController::list_banners_all))
         .route("/api/banner/create", post(BannerController::create_banner))
         .route(
-            "/api/banner/update/:id",
+            "/api/banner/update/{id}",
             post(BannerController::update_banner),
         )
         .route(
-            "/api/banner/delete/:id",
+            "/api/banner/delete/{id}",
             delete(BannerController::delete_banner),
         )
         // 购物车管理相关路由
         .route("/api/cart/get", get(CartController::list_cart_items))
         .route("/api/cart/create", post(CartController::create_cart_item))
         .route(
-            "/api/cart/update/:id",
+            "/api/cart/update/{id}",
             post(CartController::update_cart_item),
         )
         .route(
-            "/api/cart/delete/:id",
+            "/api/cart/delete/{id}",
             delete(CartController::delete_cart_item),
         )
         // 评论管理相关路由
         .route("/api/review/get", get(ReviewController::list_reviews))
         .route("/api/review/create", post(ReviewController::create_review))
         .route(
-            "/api/review/update/:id",
+            "/api/review/update/{id}",
             post(ReviewController::update_review_by_id),
         )
         .route(
-            "/api/review/delete/:id",
+            "/api/review/delete/{id}",
             delete(ReviewController::delete_review_by_id),
         )
         .route(
-            "/api/review/get_reviews_by_product_id/:id",
+            "/api/review/get_reviews_by_product_id/{id}",
             get(ReviewController::get_reviews_by_product_id),
         )
         // 静态文件服务

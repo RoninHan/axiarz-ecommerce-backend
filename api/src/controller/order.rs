@@ -16,19 +16,19 @@ use service::{
 
 #[derive(serde::Deserialize, Debug)]
 pub struct RequestData {
-    total_price: Decimal,
-    coupon_code: Option<String>,
-    gift_card_code: Option<String>,
-    shipping_address: String,
-    billing_address: String,
-    payment_method: i32,
-    discount: Option<Decimal>,
-    shipping_company: String,
-    tracking_number: String,
-    notes: Option<String>,
-    product_id: Option<i32>,
-    quantity: Option<i32>,
-    price: Option<Decimal>,
+    total_price: Decimal,           // 订单总价
+    coupon_code: Option<String>,    // 优惠券代码
+    gift_card_code: Option<String>, // 礼品卡代码
+    shipping_address: String,       // 收货地址
+    billing_address: String,        // 发票地址
+    payment_method: i32,            // 支付方式
+    discount: Option<Decimal>,      // 优惠金额
+    shipping_company: String,       // 快递公司
+    tracking_number: String,        // 快递单号
+    notes: Option<String>,          // 备注
+    product_id: Option<i32>,        // 产品ID
+    quantity: Option<i32>,          // 产品数量
+    price: Option<Decimal>,         // 产品价格
 }
 
 #[derive(serde::Deserialize, Debug)]

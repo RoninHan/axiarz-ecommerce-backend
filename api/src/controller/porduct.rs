@@ -7,25 +7,14 @@ use axum::{
     response::Json,
 };
 
-use entity::product_categories;
+use entity::{home_page_product_type, product_categories, products};
 use service::{
-    sea_orm::prelude::Decimal, PorductModel, PorductServices, ProductCategoryModel,
-    ProductCategoryServices,
+    sea_orm::prelude::Decimal, HomePageProductTypeModel, HomePageProductTypeServices, PorductModel,
+    PorductServices, ProductCategoryModel, ProductCategoryServices,
 };
 
 use serde_json::json;
 use serde_json::to_value;
-
-#[derive(Debug, serde::Deserialize)]
-pub struct PostProductModal {
-    pub name: String,
-    pub status: i32,
-    pub category_id: i32,
-    pub description: Option<String>,
-    pub stock_quantity: i32,
-    pub price: Decimal,
-    pub image_url: Option<String>,
-}
 
 #[derive(Debug, serde::Serialize)]
 pub struct ProductResponse {
@@ -414,6 +403,124 @@ impl PorductController {
         Ok(Json(json!({
             "status": "success",
             "message": "Porduct deleted"
+        })))
+    }
+
+    pub async fn get_product_by_home_product_type(
+        state: State<AppState>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let home_page_product_type =
+            HomePageProductTypeServices::get_home_page_product_type_all(&state.conn)
+                .await
+                .map_err(|e| {
+                    println!("Failed to get porduct by home product type: {:?}", e);
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Failed to get porduct by home product type",
+                    )
+                })?;
+
+        let mut porducts: Vec<Vec<entity::products::Model>> = vec![];
+        for home_page_product_type in home_page_product_type {
+            let product_category = ProductCategoryServices::find_by_category_id(
+                &state.conn,
+                home_page_product_type.product_type_id,
+            )
+            .await
+            .map_err(|e| {
+                println!("Failed to get product category: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to get product category",
+                )
+            })?;
+
+            let mut porducts_temp: Vec<entity::products::Model> = vec![];
+            for product_category in product_category {
+                let porduct: entity::products::Model =
+                    PorductServices::get_porduct_by_id(&state.conn, product_category.product_id)
+                        .await
+                        .map_err(|e| {
+                            println!("Failed to get porduct by id: {:?}", e);
+                            (
+                                StatusCode::INTERNAL_SERVER_ERROR,
+                                "Failed to get porduct by id",
+                            )
+                        })?;
+
+                porducts_temp.push(porduct);
+            }
+            porducts.push(porducts_temp);
+        }
+
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            data: json!({
+                "data": porducts,
+            }),
+        };
+
+        let json_data = to_value(data).unwrap();
+        Ok(Json(json!(json_data)))
+    }
+
+    pub async fn create_home_product(
+        state: State<AppState>,
+        mut multipart: Multipart,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let mut product_type_id = None;
+
+        while let Some(field) = multipart.next_field().await.map_err(|_| {
+            (
+                StatusCode::BAD_REQUEST,
+                "Failed to process multipart form data",
+            )
+        })? {
+            let name = field.name().unwrap_or("").to_string();
+            if name == "product_type_id" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read product_type_id field from form data",
+                    )
+                })?;
+                product_type_id = Some(data);
+            }
+        }
+
+        let home_page_product_type_data = HomePageProductTypeModel {
+            product_type_id: product_type_id.unwrap().parse().unwrap(),
+        };
+
+        let _ = HomePageProductTypeServices::create_home_page_product_type(
+            &state.conn,
+            home_page_product_type_data,
+        )
+        .await;
+
+        Ok(Json(json!({
+            "status": "success",
+            "message": "Home page product type created successfully"
+        })))
+    }
+
+    pub async fn delete_home_product(
+        state: State<AppState>,
+        Path(id): Path<i32>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        HomePageProductTypeServices::delete_home_page_product_type_by_id(&state.conn, id)
+            .await
+            .map_err(|e| {
+                println!("Failed to delete home page product type: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to delete home page product type",
+                )
+            })?;
+
+        Ok(Json(json!({
+            "status": "success",
+            "message": "Home page product type deleted successfully"
         })))
     }
 }
