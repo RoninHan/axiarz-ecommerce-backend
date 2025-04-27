@@ -11,7 +11,8 @@ use axum::{
 };
 
 use controller::{
-    banner::BannerController, category::CategoriesController, order::OrderController, payment::PaymentController,
+    banner::BannerController, category::CategoriesController, order::OrderController,
+    payment::PaymentController,
 };
 use middleware::auth::Auth;
 use migration::{Migrator, MigratorTrait};
@@ -127,6 +128,10 @@ async fn start() -> anyhow::Result<()> {
         .route(
             "/api/product/delete_home_product/{id}",
             delete(PorductController::delete_home_product),
+        )
+        .route(
+            "/api/product/get/:id",
+            get(PorductController::get_porduct_by_id),
         )
         // 分类管理相关路由
         .route(

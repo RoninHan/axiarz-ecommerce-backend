@@ -523,4 +523,27 @@ impl PorductController {
             "message": "Home page product type deleted successfully"
         })))
     }
+
+    pub async fn get_porduct_by_id(
+        state: State<AppState>,
+        Path(id): Path<i32>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let porduct: entity::products::Model = PorductServices::get_porduct_by_id(&state.conn, id)
+            .await
+            .map_err(|e| {
+                println!("Failed to get porduct by id: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to get porduct by id",
+                )
+            })?;
+
+        Ok(Json(json!(
+            {
+                "status": "success",
+                "message": "Porduct get success",
+                "data":porduct
+            }
+        )))
+    }
 }
