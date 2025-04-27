@@ -11,7 +11,7 @@ use axum::{
 };
 
 use controller::{
-    banner::BannerController, category::CategoriesController, order::OrderController,
+    banner::BannerController, category::CategoriesController, order::OrderController, payment::PaymentController,
 };
 use middleware::auth::Auth;
 use migration::{Migrator, MigratorTrait};
@@ -197,6 +197,7 @@ async fn start() -> anyhow::Result<()> {
             "/api/review/get_reviews_by_product_id/{id}",
             get(ReviewController::get_reviews_by_product_id),
         )
+        .route("/api/payment", post(PaymentController::create_payment))
         // 静态文件服务
         .nest_service(
             "/static",

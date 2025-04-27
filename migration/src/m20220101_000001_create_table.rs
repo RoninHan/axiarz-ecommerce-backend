@@ -63,36 +63,123 @@ impl MigrationTrait for Migration {
                 Table::create()
                     .table(Orders::Table)
                     .if_not_exists()
-                    .col(pk_auto(Orders::Id))
-                    .col(ColumnDef::new(Orders::UserId).integer().not_null())
-                    .col(ColumnDef::new(Orders::TotalPrice).decimal().not_null())
-                    .col(ColumnDef::new(Orders::Status).integer().not_null())
-                    .col(ColumnDef::new(Orders::ShippingStatus).integer().not_null())
-                    .col(ColumnDef::new(Orders::ShippingCompany).string())
-                    .col(ColumnDef::new(Orders::TrackingNumber).string())
-                    .col(ColumnDef::new(Orders::PaymentStatus).integer().not_null())
-                    .col(ColumnDef::new(Orders::PaymentMethod).integer().not_null())
+                    .col(pk_auto(Orders::Id).comment("订单ID"))
+                    .col(
+                        ColumnDef::new(Orders::UserId)
+                            .integer()
+                            .not_null()
+                            .comment("用户ID（外键，指向users表）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::TotalPrice)
+                            .decimal()
+                            .not_null()
+                            .comment("订单总金额"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::Status)
+                            .integer()
+                            .not_null()
+                            .comment("订单状态"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::ShippingStatus)
+                            .integer()
+                            .not_null()
+                            .comment("配送状态"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::ShippingCompany)
+                            .string()
+                            .comment("配送公司（可选，配送信息来自shipping_info表）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::TrackingNumber)
+                            .string()
+                            .comment("物流单号（可选，配送信息来自shipping_info表）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::PaymentStatus)
+                            .integer()
+                            .not_null()
+                            .comment("支付状态('pending', 'paid', 'failed', 'refunded')"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::PaymentMethod)
+                            .integer()
+                            .not_null()
+                            .comment("支付方式"),
+                    )
                     .col(
                         ColumnDef::new(Orders::CreatedAt)
                             .timestamp_with_time_zone()
-                            .not_null(),
+                            .not_null()
+                            .comment("订单创建时间"),
                     )
                     .col(
                         ColumnDef::new(Orders::UpdatedAt)
                             .timestamp_with_time_zone()
-                            .not_null(),
+                            .not_null()
+                            .comment("订单更新时间"),
                     )
-                    .col(ColumnDef::new(Orders::PaidAt).timestamp_with_time_zone())
-                    .col(ColumnDef::new(Orders::ShippedAt).timestamp_with_time_zone())
-                    .col(ColumnDef::new(Orders::DeliveredAt).timestamp_with_time_zone())
-                    .col(ColumnDef::new(Orders::CanceledAt).timestamp_with_time_zone())
-                    .col(ColumnDef::new(Orders::RefundedAt).timestamp_with_time_zone())
-                    .col(ColumnDef::new(Orders::ShippingAddress).text().not_null())
-                    .col(ColumnDef::new(Orders::BillingAddress).text().not_null())
-                    .col(ColumnDef::new(Orders::Discount).decimal().default("0.00"))
-                    .col(ColumnDef::new(Orders::CouponCode).string())
-                    .col(ColumnDef::new(Orders::GiftCardCode).string())
-                    .col(ColumnDef::new(Orders::Notes).text())
+                    .col(
+                        ColumnDef::new(Orders::PaidAt)
+                            .timestamp_with_time_zone()
+                            .comment("支付时间"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::ShippedAt)
+                            .timestamp_with_time_zone()
+                            .comment("发货时间"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::DeliveredAt)
+                            .timestamp_with_time_zone()
+                            .comment("配送完成时间"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::CanceledAt)
+                            .timestamp_with_time_zone()
+                            .comment("取消时间"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::RefundedAt)
+                            .timestamp_with_time_zone()
+                            .comment("退款时间"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::ShippingAddress)
+                            .text()
+                            .not_null()
+                            .comment("配送地址（如果支持物理配送）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::BillingAddress)
+                            .text()
+                            .not_null()
+                            .comment("账单地址（用于发票等）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::Discount)
+                            .decimal()
+                            .default("0.00")
+                            .comment("订单折扣金额（如有）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::CouponCode)
+                            .string()
+                            .comment("优惠券代码（可选）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::GiftCardCode)
+                            .string()
+                            .comment("礼品卡代码（可选）"),
+                    )
+                    .col(
+                        ColumnDef::new(Orders::Notes)
+                            .text()
+                            .comment("用户备注（如配送要求等）"),
+                    )
                     .to_owned(),
             )
             .await?;

@@ -32,11 +32,11 @@ impl OrderServices {
         orders::ActiveModel {
             user_id: Set(form_data.user_id),
             total_price: Set(form_data.total_price),
-            status: Set(form_data.status.to_owned()),
+            status: Set(0),
             shipping_status: Set(form_data.shipping_status),
             shipping_company: Set(form_data.shipping_company.to_owned()),
             tracking_number: Set(form_data.tracking_number.to_owned()),
-            payment_status: Set(form_data.payment_status),
+            payment_status: Set(0),
             payment_method: Set(form_data.payment_method),
             shipping_address: Set(form_data.shipping_address.to_owned()),
             billing_address: Set(form_data.billing_address.to_owned()),

@@ -1,4 +1,4 @@
-use std::result;
+
 
 use crate::tools::{AppState, Params, ResponseData, ResponseStatus};
 use axum::{
@@ -7,7 +7,7 @@ use axum::{
     response::Json,
     Extension,
 };
-use entity::{order_items, shipping_info, users::Model as UserModel};
+use entity::{ users::Model as UserModel};
 use serde_json::json;
 use serde_json::to_value;
 use service::{
