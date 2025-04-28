@@ -7,6 +7,9 @@ use serde::{Deserialize, Serialize};
 #[derive(Deserialize, Serialize, Debug)]
 pub struct HomePageProductTypeModel {
     pub product_type_id: i32,
+    pub name: String,
+    pub description: Option<String>,
+    pub image_url: String,
 }
 
 pub struct HomePageProductTypeServices;
@@ -20,6 +23,9 @@ impl HomePageProductTypeServices {
             product_type_id: Set(form_data.product_type_id),
             created_at: Set(Utc::now().into()),
             updated_at: Set(Utc::now().into()),
+            name: Set(form_data.name),
+            description: Set(form_data.description),
+            image_url: Set(form_data.image_url),
             ..Default::default()
         }
         .save(db)
@@ -44,6 +50,9 @@ impl HomePageProductTypeServices {
             id: home_page_product_type.id,
             product_type_id: Set(form_data.product_type_id),
             updated_at: Set(Utc::now().into()),
+            name: Set(form_data.name),
+            description: Set(form_data.description),
+            image_url: Set(form_data.image_url),
             ..Default::default()
         }
         .update(db)

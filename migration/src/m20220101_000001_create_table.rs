@@ -44,6 +44,14 @@ impl MigrationTrait for Migration {
                     .col(ColumnDef::new(Products::StockQuantity).integer().not_null())
                     .col(ColumnDef::new(Products::Price).decimal().not_null())
                     .col(ColumnDef::new(Products::ImageUrl).string())
+                    .col(ColumnDef::new(Products::TypeName).string())
+                    .col(ColumnDef::new(Products::Sku).string())
+                    .col(ColumnDef::new(Products::Brand).string())
+                    .col(ColumnDef::new(Products::ProductDetails).string())
+                    .col(ColumnDef::new(Products::ProductInformation).string())
+                    .col(ColumnDef::new(Products::ConfigurationList).string())
+                    .col(ColumnDef::new(Products::Wass).string())
+                    .col(ColumnDef::new(Products::IsNew).integer().not_null())
                     .col(
                         ColumnDef::new(Products::CreatedAt)
                             .timestamp_with_time_zone()
@@ -486,13 +494,16 @@ impl MigrationTrait for Migration {
                             .integer()
                             .not_null(),
                     )
+                    .col(ColumnDef::new(HomePageProductType::Name).string().not_null())
+                    .col(ColumnDef::new(HomePageProductType::Description).text())
+                    .col(ColumnDef::new(HomePageProductType::ImageUrl).string().not_null())
                     .col(
-                        ColumnDef::new(Payments::CreatedAt)
+                        ColumnDef::new(HomePageProductType::CreatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
                     .col(
-                        ColumnDef::new(Payments::UpdatedAt)
+                        ColumnDef::new(HomePageProductType::UpdatedAt)
                             .timestamp_with_time_zone()
                             .not_null(),
                     )
@@ -603,7 +614,15 @@ enum Products {
     Description,
     StockQuantity,
     Price,
+    Sku,
+    TypeName,
+    Brand,
+    ProductDetails,
+    ProductInformation,
+    ConfigurationList,
+    Wass,
     ImageUrl,
+    IsNew,
     CreatedAt,
     UpdatedAt,
 }
@@ -916,6 +935,9 @@ enum HotSearch {
 enum HomePageProductType {
     Table,
     Id,
+    Name,
+    Description,
+    ImageUrl,
     ProductTypeId,
     CreatedAt,
     UpdatedAt,

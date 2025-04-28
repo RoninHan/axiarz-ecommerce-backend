@@ -28,6 +28,13 @@ pub struct ProductResponse {
     pub image_url: Option<String>,
 }
 
+#[derive(Debug, serde::Serialize)]
+pub struct HomeProductModal {
+    pub name: String,
+    pub image_url: Option<String>,
+    pub data: Vec<entity::products::Model>,
+}
+
 pub struct PorductController;
 
 impl PorductController {
@@ -93,6 +100,14 @@ impl PorductController {
         let mut price = None;
         let mut image_url = None;
         let mut category_id = None;
+        let mut sku = None;
+        let mut type_name = None;
+        let mut brand = None;
+        let mut product_details = None;
+        let mut product_information = None;
+        let mut configuration_list = None;
+        let mut wass = None;
+        let mut is_new = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|_| {
             (
@@ -179,6 +194,70 @@ impl PorductController {
                     )
                 })?;
                 category_id = Some(data);
+            } else if name == "sku" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read sku field from form data",
+                    )
+                })?;
+                sku = Some(data);
+            } else if name == "type_name" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read type_name field from form data",
+                    )
+                })?;
+                type_name = Some(data);
+            } else if name == "brand" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read brand field from form data",
+                    )
+                })?;
+                brand = Some(data);
+            } else if name == "product_details" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read product_details field from form data",
+                    )
+                })?;
+                product_details = Some(data);
+            } else if name == "product_information" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read product_information field from form data",
+                    )
+                })?;
+                product_information = Some(data);
+            } else if name == "configuration_list" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read configuration_list field from form data",
+                    )
+                })?;
+                configuration_list = Some(data);
+            } else if name == "wass" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read wass field from form data",
+                    )
+                })?;
+                wass = Some(data);
+            } else if name == "is_new" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read is_new field from form data",
+                    )
+                })?;
+                is_new = Some(data);
             }
         }
 
@@ -189,6 +268,14 @@ impl PorductController {
             stock_quantity: stock_quantity.unwrap().parse().unwrap(),
             price: Decimal::from_str(price.as_ref().unwrap()).unwrap(),
             image_url: image_url,
+            sku: sku,
+            type_name: type_name,
+            brand: brand,
+            product_details: product_details,
+            product_information: product_information,
+            configuration_list: configuration_list,
+            wass: wass,
+            is_new: is_new.unwrap().parse().unwrap(),
         };
         let product_res = PorductServices::create_porduct(&state.conn, product_data)
             .await
@@ -235,6 +322,14 @@ impl PorductController {
         let mut price = None;
         let mut image_url = None;
         let mut category_id = None;
+        let mut sku = None;
+        let mut type_name = None;
+        let mut brand = None;
+        let mut product_details = None;
+        let mut product_information = None;
+        let mut configuration_list = None;
+        let mut wass = None;
+        let mut is_new = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|_| {
             (
@@ -321,6 +416,70 @@ impl PorductController {
                     )
                 })?;
                 category_id = Some(data);
+            } else if name == "sku" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read sku field from form data",
+                    )
+                })?;
+                sku = Some(data);
+            } else if name == "type_name" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read type_name field from form data",
+                    )
+                })?;
+                type_name = Some(data);
+            } else if name == "brand" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read brand field from form data",
+                    )
+                })?;
+                brand = Some(data);
+            } else if name == "product_details" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read product_details field from form data",
+                    )
+                })?;
+                product_details = Some(data);
+            } else if name == "product_information" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read product_information field from form data",
+                    )
+                })?;
+                product_information = Some(data);
+            } else if name == "configuration_list" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read configuration_list field from form data",
+                    )
+                })?;
+                configuration_list = Some(data);
+            } else if name == "wass" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read wass field from form data",
+                    )
+                })?;
+                wass = Some(data);
+            } else if name == "is_new" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read is_new field from form data",
+                    )
+                })?;
+                is_new = Some(data);
             }
         }
         println!("1111111111111111111");
@@ -345,6 +504,17 @@ impl PorductController {
             price: Decimal::from_str(&price.unwrap_or(porduct.price.to_string()).to_string())
                 .unwrap(),
             image_url: image_url.or(porduct.image_url),
+            sku: sku.or(porduct.sku),
+            type_name: type_name.or(porduct.type_name),
+            brand: brand.or(porduct.brand),
+            product_details: product_details.or(porduct.product_details),
+            product_information: product_information.or(porduct.product_information),
+            configuration_list: configuration_list.or(porduct.configuration_list),
+            wass: wass.or(porduct.wass),
+            is_new: is_new
+                .unwrap_or(porduct.is_new.to_string())
+                .parse()
+                .unwrap(),
         };
 
         println!("3333333333333333333333");
@@ -420,7 +590,7 @@ impl PorductController {
                     )
                 })?;
 
-        let mut porducts: Vec<Vec<entity::products::Model>> = vec![];
+        let mut porducts: Vec<HomeProductModal> = vec![];
         for home_page_product_type in home_page_product_type {
             let product_category = ProductCategoryServices::find_by_category_id(
                 &state.conn,
@@ -450,14 +620,18 @@ impl PorductController {
 
                 porducts_temp.push(porduct);
             }
-            porducts.push(porducts_temp);
+
+            let home_product: HomeProductModal = HomeProductModal {
+                name: home_page_product_type.name,
+                image_url: Some(home_page_product_type.image_url),
+                data: porducts_temp,
+            };
+            porducts.push(home_product);
         }
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: json!({
-                "data": porducts,
-            }),
+            data: json!(porducts),
         };
 
         let json_data = to_value(data).unwrap();
@@ -469,6 +643,9 @@ impl PorductController {
         mut multipart: Multipart,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
         let mut product_type_id = None;
+        let mut home_product_name = None;
+        let mut description = None;
+        let mut image_url = None;
 
         while let Some(field) = multipart.next_field().await.map_err(|_| {
             (
@@ -485,11 +662,60 @@ impl PorductController {
                     )
                 })?;
                 product_type_id = Some(data);
+            } else if name == "name" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read name field from form data",
+                    )
+                })?;
+                home_product_name = Some(data);
+            } else if name == "description" {
+                let data = field.text().await.map_err(|_| {
+                    (
+                        StatusCode::BAD_REQUEST,
+                        "Failed to read description field from form data",
+                    )
+                })?;
+                description = Some(data);
+            } else if name == "image" {
+                // 提取圖片文件
+                let file_name = field.file_name().unwrap_or("default.png").to_string();
+                let file_data = field
+                    .bytes()
+                    .await
+                    .map_err(|_| (StatusCode::BAD_REQUEST, "Failed to read image file"))?;
+
+                // 确保目标目录存在
+                let upload_dir = "./uploads";
+                if !std::path::Path::new(upload_dir).exists() {
+                    std::fs::create_dir_all(upload_dir).map_err(|e| {
+                        eprintln!("Failed to create upload directory: {:?}", e); // 打印具体的错误信息
+                        (
+                            StatusCode::INTERNAL_SERVER_ERROR,
+                            "Failed to create upload directory",
+                        )
+                    })?;
+                }
+
+                // 保存图片到服务器
+                let file_path = format!("{}/{}", upload_dir, file_name);
+                fs::write(&file_path, &file_data).map_err(|e| {
+                    eprintln!("Failed to save image file: {:?}", e); // 打印具体的错误信息
+                    (
+                        StatusCode::INTERNAL_SERVER_ERROR,
+                        "Failed to save image file",
+                    )
+                })?;
+                image_url = Some(file_path.replace("./", "/"));
             }
         }
 
         let home_page_product_type_data = HomePageProductTypeModel {
             product_type_id: product_type_id.unwrap().parse().unwrap(),
+            name: home_product_name.unwrap(),
+            description: description,
+            image_url: image_url.unwrap(),
         };
 
         let _ = HomePageProductTypeServices::create_home_page_product_type(
@@ -535,6 +761,28 @@ impl PorductController {
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
                     "Failed to get porduct by id",
+                )
+            })?;
+
+        Ok(Json(json!(
+            {
+                "status": "success",
+                "message": "Porduct get success",
+                "data":porduct
+            }
+        )))
+    }
+
+    pub async fn get_product_by_new(
+        state: State<AppState>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let porduct = PorductServices::get_product_by_new(&state.conn)
+            .await
+            .map_err(|e| {
+                println!("Failed to get porduct by new: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to get porduct by new",
                 )
             })?;
 

@@ -12,6 +12,14 @@ pub struct PorductModel {
     pub stock_quantity: i32,
     pub price: prelude::Decimal,
     pub image_url: Option<String>,
+    pub sku: Option<String>,
+    pub type_name: Option<String>,
+    pub brand: Option<String>,
+    pub product_details: Option<String>,
+    pub product_information: Option<String>,
+    pub configuration_list: Option<String>,
+    pub wass: Option<String>,
+    pub is_new: i32,
 }
 
 pub struct PorductServices;
@@ -28,6 +36,14 @@ impl PorductServices {
             stock_quantity: Set(form_data.stock_quantity),
             price: Set(form_data.price),
             image_url: Set(form_data.image_url.to_owned()),
+            sku: Set(form_data.sku.to_owned()),
+            type_name: Set(form_data.type_name.to_owned()),
+            brand: Set(form_data.brand.to_owned()),
+            product_details: Set(form_data.product_details.to_owned()),
+            product_information: Set(form_data.product_information.to_owned()),
+            configuration_list: Set(form_data.configuration_list.to_owned()),
+            wass: Set(form_data.wass.to_owned()),
+            is_new: Set(form_data.is_new),
             created_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
@@ -54,6 +70,13 @@ impl PorductServices {
             stock_quantity: Set(form_data.stock_quantity),
             price: Set(form_data.price),
             image_url: Set(form_data.image_url.to_owned()),
+            sku: Set(form_data.sku.to_owned()),
+            type_name: Set(form_data.type_name.to_owned()),
+            brand: Set(form_data.brand.to_owned()),
+            product_details: Set(form_data.product_details.to_owned()),
+            product_information: Set(form_data.product_information.to_owned()),
+            configuration_list: Set(form_data.configuration_list.to_owned()),
+            is_new: Set(form_data.is_new),
             updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
         }
@@ -93,5 +116,14 @@ impl PorductServices {
             .one(db)
             .await?
             .ok_or(DbErr::Custom("Cannot find porduct.".to_owned()))
+    }
+
+    pub async fn get_product_by_new(db: &DbConn) -> Result<Vec<products::Model>, DbErr> {
+        Product::find()
+            .filter(products::Column::IsNew.eq(1))
+            .order_by_desc(products::Column::CreatedAt)
+            .limit(5)
+            .all(db)
+            .await
     }
 }

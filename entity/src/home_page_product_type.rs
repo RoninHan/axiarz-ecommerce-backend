@@ -9,6 +9,10 @@ pub struct Model {
     #[sea_orm(primary_key)]
     pub id: i32,
     pub product_type_id: i32,
+    pub name: String,
+    #[sea_orm(column_type = "Text", nullable)]
+    pub description: Option<String>,
+    pub image_url: String,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
 }
