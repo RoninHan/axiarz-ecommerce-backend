@@ -44,9 +44,11 @@ impl PorductController {
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
         let page = params.page.unwrap_or(1);
         let posts_per_page = params.posts_per_page.unwrap_or(5);
+        let q = params.q;
+        let categories_id = params.categories_id;
 
-        let (porducts, num_pages) =
-            PorductServices::get_porducts_by_page(&state.conn, page, posts_per_page)
+        let (porducts, total_pages, num_pages) =
+            PorductServices::get_porducts_by_page(&state.conn, page, posts_per_page, q, categories_id)
                 .await
                 .expect("Cannot find posts in page");
 
@@ -80,6 +82,7 @@ impl PorductController {
                 json!({
                     "data": porducts,
                     "num_pages": num_pages,
+                    "total_pages":total_pages
                 })
             },
         };

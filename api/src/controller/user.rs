@@ -48,9 +48,8 @@ impl UserController {
         println!("Payload: {:?}", payload);
         // password md5
         let payload = UserModel {
-            password: Auth::hash_password(&payload.password).map_err(|_| {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password")
-            })?,
+            password: Auth::hash_password(&payload.password)
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password"))?,
             ..payload
         };
         UserServices::create_user(&state.conn, payload)
@@ -111,7 +110,7 @@ impl UserController {
 
     pub async fn login(
         state: State<AppState>,
-        Json(mut payload): Json<LoginModel>,
+        Json(payload): Json<LoginModel>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
         let email = &payload.email;
         let password = &payload.password;

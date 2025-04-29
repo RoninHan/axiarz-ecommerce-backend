@@ -1,4 +1,4 @@
-use ::entity::{products, products::Entity as Product};
+use ::entity::{product_categories::Entity as ProductCategory, products::{self, Entity as Product}};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -102,13 +102,33 @@ impl PorductServices {
         db: &DbConn,
         page: u64,
         size: u64,
-    ) -> Result<(Vec<products::Model>, u64), DbErr> {
-        let paginator = Product::find()
-            .order_by_asc(products::Column::Id)
-            .paginate(db, size);
-        let num_pages = paginator.num_pages().await?;
+        q: Option<String>,
+        categories_id: Option<i32>,
+    ) -> Result<(Vec<products::Model>, u64, u64), DbErr> {
+        let mut query = Product::find();
 
-        paginator.fetch_page(page - 1).await.map(|p| (p, num_pages))
+        // 如果提供了查询条件，则添加过滤条件
+        if let Some(query_string) = q {
+            query =
+                query.filter(products::Column::Name.like(format!("%{}%", query_string).as_str()));
+        }
+
+        
+
+        
+        // 按 ID 升序排序
+        let paginator = query.order_by_asc(products::Column::Id).paginate(db, size);
+
+        // 获取总记录数
+        let total_items = paginator.num_items().await?;
+
+        // 计算总页数
+        let total_pages = (total_items + size - 1) / size;
+
+        // 获取指定页的数据
+        let products = paginator.fetch_page(page.saturating_sub(1)).await?;
+
+        Ok((products, total_pages, total_items))
     }
 
     pub async fn get_porduct_by_id(db: &DbConn, id: i32) -> Result<products::Model, DbErr> {
