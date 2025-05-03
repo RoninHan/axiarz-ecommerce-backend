@@ -9,8 +9,10 @@ use axum::{
 
 use entity::{home_page_product_type, product_categories, products};
 use service::{
-    sea_orm::prelude::Decimal, HomePageProductTypeModel, HomePageProductTypeServices, PorductModel,
-    PorductServices, ProductCategoryModel, ProductCategoryServices,
+    home_page_product_type::{HomePageProductTypeModel, HomePageProductTypeServices},
+    porducts::{PorductModel, PorductServices},
+    product_categories::{ProductCategoryModel, ProductCategoryServices},
+    sea_orm::prelude::Decimal,
 };
 
 use serde_json::json;
@@ -278,7 +280,7 @@ impl PorductController {
             product_information: product_information,
             configuration_list: configuration_list,
             wass: wass,
-            is_new: is_new.unwrap().parse().unwrap(),
+            is_new: is_new.unwrap_or("1".to_string()).parse().unwrap(),
         };
         let product_res = PorductServices::create_porduct(&state.conn, product_data)
             .await

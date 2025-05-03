@@ -11,7 +11,7 @@ use axum::{
 };
 
 use controller::{
-    banner::BannerController, category::CategoriesController, order::OrderController,
+    banner::BannerController, category::CategoryController, order::OrderController,
     payment::PaymentController,
 };
 use middleware::auth::Auth;
@@ -67,6 +67,7 @@ async fn start() -> anyhow::Result<()> {
     let app = Router::new()
         // 用户认证相关路由
         .route("/api/login", post(UserController::login))
+        .route("/api/register", post(UserController::register))
         // 用户管理相关路由
         .route(
             "/api/user",
@@ -140,19 +141,19 @@ async fn start() -> anyhow::Result<()> {
         // 分类管理相关路由
         .route(
             "/api/category/get",
-            get(CategoriesController::list_categories),
+            get(CategoryController::list_categories),
         )
         .route(
             "/api/category/create",
-            post(CategoriesController::create_category),
+            post(CategoryController::create_category),
         )
         .route(
             "/api/category/update/:id",
-            post(CategoriesController::update_category),
+            post(CategoryController::update_category),
         )
         .route(
             "/api/category/delete/:id",
-            delete(CategoriesController::delete_category),
+            delete(CategoryController::delete_category),
         )
         // 订单管理相关路由
         .route("/api/order/list", get(OrderController::list_orders))
@@ -181,7 +182,10 @@ async fn start() -> anyhow::Result<()> {
             delete(BannerController::delete_banner),
         )
         // 购物车管理相关路由
-        .route("/api/cart/get", get(CartController::list_cart_items))
+        .route("/api/cart/get", get(CartController::list_cart_items).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
         .route("/api/cart/create", post(CartController::create_cart_item))
         .route(
             "/api/cart/update/:id",

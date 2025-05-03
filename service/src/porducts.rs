@@ -1,4 +1,4 @@
-use ::entity::{product_categories::Entity as ProductCategory, products::{self, Entity as Product}};
+use ::entity::{product_categories::{self, Entity as ProductCategory, Column as ProductCategoryColumn}, products::{self, Entity as Product}, categories};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -105,17 +105,21 @@ impl PorductServices {
         q: Option<String>,
         categories_id: Option<i32>,
     ) -> Result<(Vec<products::Model>, u64, u64), DbErr> {
+
         let mut query = Product::find();
+
+        // 如果提供了分类ID，则添加分类过滤
+        if let Some(cat_id) = categories_id {
+            query = query
+                .join(JoinType::LeftJoin, products::Relation::ProductCategories.def())
+                .filter(product_categories::Column::CategoryId.eq(cat_id));
+        }
 
         // 如果提供了查询条件，则添加过滤条件
         if let Some(query_string) = q {
-            query =
-                query.filter(products::Column::Name.like(format!("%{}%", query_string).as_str()));
+            query = query.filter(products::Column::Name.like(format!("%{}%", query_string).as_str()));
         }
 
-        
-
-        
         // 按 ID 升序排序
         let paginator = query.order_by_asc(products::Column::Id).paginate(db, size);
 

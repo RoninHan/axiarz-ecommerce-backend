@@ -1,3 +1,6 @@
+/// 地址控制器模块
+pub(crate) mod address;
+
 /// 轮播图控制器模块
 pub(crate) mod banner;
 

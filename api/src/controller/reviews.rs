@@ -6,7 +6,7 @@ use axum::{
 };
 use serde_json::json;
 use serde_json::to_value;
-use service::{ReviewModel, ReviewServices};
+use service::reviews::{ReviewModel, ReviewServices};
 
 pub struct ReviewController;
 

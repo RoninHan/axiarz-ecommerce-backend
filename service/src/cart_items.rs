@@ -1,4 +1,4 @@
-use ::entity::{cart_items, cart_items::Entity as CartItem};
+use ::entity::{cart_items, cart_items::Entity as CartItem, products::{self, Entity as Product}};
 use chrono::{DateTime, Utc};
 use prelude::DateTimeWithTimeZone;
 use sea_orm::*;
@@ -10,6 +10,16 @@ pub struct CartItemModel {
     pub user_id: i32,    // 用户ID
     pub product_id: i32, // 产品ID
     pub quantity: i32,   // 产品数量
+}
+
+#[derive(Deserialize, Serialize, Debug)]
+pub struct CartItemWithProduct {
+    pub id: i32,
+    pub user_id: i32,
+    pub product_id: i32,
+    pub quantity: i32,
+    pub added_at: Option<DateTimeWithTimeZone>,
+    pub product: Option<products::Model>,
 }
 
 // 定义一个服务结构体，用于封装购物车项的相关操作
@@ -76,13 +86,22 @@ impl CartItemServices {
 
     // 根据用户ID获取购物车项列表
     pub async fn get_cart_items_by_user_id(
-        db: &DbConn,  // 数据库连接
-        user_id: i32, // 用户ID
-    ) -> Result<Vec<cart_items::Model>, DbErr> {
-        // 查询指定用户ID的所有购物车项
-        CartItem::find()
-            .filter(cart_items::Column::UserId.eq(user_id)) // 过滤条件：用户ID匹配
-            .all(db) // 查询所有匹配的记录
-            .await // 异步等待查询结果
+        db: &DbConn,
+        user_id: i32,
+    ) -> Result<Vec<CartItemWithProduct>, DbErr> {
+        let results = CartItem::find()
+            .filter(cart_items::Column::UserId.eq(user_id))
+            .find_also_related(Product)
+            .all(db)
+            .await?;
+
+        Ok(results.into_iter().map(|(cart_item, product)| CartItemWithProduct {
+            id: cart_item.id,
+            user_id: cart_item.user_id,
+            product_id: cart_item.product_id,
+            quantity: cart_item.quantity,
+            added_at: cart_item.added_at,
+            product,
+        }).collect())
     }
 }

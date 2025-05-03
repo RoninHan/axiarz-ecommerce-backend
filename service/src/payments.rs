@@ -70,6 +70,26 @@ impl PaymentServices {
         .await
     }
 
+    pub async fn update_payment_status(
+        db: &DbConn,
+        order_id: i32,
+        pay_status: i32,
+        paid_at: Option<DateTime<Utc>>,
+    ) -> Result<payments::Model, DbErr> {
+        let payment = Payment::find()
+            .filter(payments::Column::OrderId.eq(order_id))
+            .one(db)
+            .await?
+            .ok_or(DbErr::Custom("Cannot find payment.".to_owned()))?;
+
+        let mut payment: payments::ActiveModel = payment.into();
+        payment.pay_status = Set(pay_status);
+        payment.paid_at = Set(paid_at.map(DateTimeWithTimeZone::from));
+        payment.updated_at = Set(DateTimeWithTimeZone::from(Utc::now()));
+
+        payment.update(db).await
+    }
+
     pub async fn delete_payment_by_id(db: &DbConn, id: i32) -> Result<DeleteResult, DbErr> {
         let payments: payments::ActiveModel = Payment::find_by_id(id)
             .one(db)
