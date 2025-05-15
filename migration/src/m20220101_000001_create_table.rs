@@ -398,6 +398,7 @@ impl MigrationTrait for Migration {
                     .if_not_exists()
                     .col(pk_auto(Address::Id))
                     .col(ColumnDef::new(Address::UserId).integer().not_null())
+                    .col(ColumnDef::new(Address::Receiver).string().not_null().comment("收货人姓名"))
                     .col(ColumnDef::new(Address::Phone).string().not_null())
                     .col(ColumnDef::new(Address::Province).string().not_null())
                     .col(ColumnDef::new(Address::City).string().not_null())
@@ -511,6 +512,35 @@ impl MigrationTrait for Migration {
             )
             .await?;
 
+        // 创建发票信息表
+        manager
+            .create_table(
+                Table::create()
+                    .table(Invoice::Table)
+                    .if_not_exists()
+                    .col(pk_auto(Invoice::Id))
+                    .col(ColumnDef::new(Invoice::UserId).integer().not_null())
+                    .col(ColumnDef::new(Invoice::Type).integer().not_null().comment("发票类型：1-个人，2-企业"))
+                    .col(ColumnDef::new(Invoice::Title).string().not_null().comment("发票抬头"))
+                    .col(ColumnDef::new(Invoice::TaxNumber).string().comment("税号"))
+                    .col(ColumnDef::new(Invoice::Content).string().not_null().comment("发票内容"))
+                    .col(ColumnDef::new(Invoice::Email).string().comment("接收发票的邮箱"))
+                    .col(ColumnDef::new(Invoice::Phone).string().comment("联系电话"))
+                    .col(ColumnDef::new(Invoice::IsDefault).boolean().default(false).comment("是否默认"))
+                    .col(
+                        ColumnDef::new(Invoice::CreatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .col(
+                        ColumnDef::new(Invoice::UpdatedAt)
+                            .timestamp_with_time_zone()
+                            .not_null(),
+                    )
+                    .to_owned(),
+            )
+            .await?;
+
         Ok(())
     }
 
@@ -569,6 +599,10 @@ impl MigrationTrait for Migration {
 
         manager
             .drop_table(Table::drop().table(Address::Table).to_owned())
+            .await?;
+
+        manager
+            .drop_table(Table::drop().table(Invoice::Table).to_owned())
             .await?;
 
         manager
@@ -891,6 +925,7 @@ enum Address {
     Table,
     Id,
     UserId,
+    Receiver,
     Phone,
     Province,
     City,
@@ -939,6 +974,22 @@ enum HomePageProductType {
     Description,
     ImageUrl,
     ProductTypeId,
+    CreatedAt,
+    UpdatedAt,
+}
+
+#[derive(DeriveIden)]
+enum Invoice {
+    Table,
+    Id,
+    UserId,
+    Type,
+    Title,
+    TaxNumber,
+    Content,
+    Email,
+    Phone,
+    IsDefault,
     CreatedAt,
     UpdatedAt,
 }

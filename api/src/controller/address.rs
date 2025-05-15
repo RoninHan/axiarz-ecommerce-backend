@@ -5,9 +5,10 @@ use crate::{
 use axum::{
     extract::{Path, Query, State},
     http::StatusCode,
-    response::Json,
+    response::Json, Extension,
 };
-use service::address::{AddressModel, AddressServices};
+use entity::users::Model as UserModel;
+use service::{address::{AddressModel, AddressServices}};
 use serde_json::json;
 use serde_json::to_value;
 
@@ -15,11 +16,12 @@ pub struct AddressController;
 
 impl AddressController {
     pub async fn create_address(
+        Extension(user): Extension<UserModel>,
         state: State<AppState>,
         Json(payload): Json<AddressModel>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
         println!("Payload: {:?}", payload);
-        AddressServices::create_address(&state.conn, payload)
+        AddressServices::create_address(&state.conn, payload, user.id)
             .await
             .expect("Cannot create address");
 
@@ -35,12 +37,12 @@ impl AddressController {
     }
 
     pub async fn update_address(
+        Extension(user): Extension<UserModel>,
         state: State<AppState>,
         Path(id): Path<i32>,
         Json(payload): Json<AddressModel>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        println!("Payload: {:?}", payload);
-        AddressServices::update_address_by_id(&state.conn, id, payload)
+        AddressServices::update_address_by_id(&state.conn, id, payload, user.id)
             .await
             .expect("Cannot update address");
 
@@ -56,6 +58,7 @@ impl AddressController {
     }
 
     pub async fn delete_address(
+        Extension(user): Extension<UserModel>,
         state: State<AppState>,
         Path(id): Path<i32>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
@@ -75,10 +78,10 @@ impl AddressController {
     }
 
     pub async fn get_addresses_by_user_id(
+        Extension(user): Extension<UserModel>,
         state: State<AppState>,
-        Path(user_id): Path<i32>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        let addresses = AddressServices::get_addresses_by_user_id(&state.conn, user_id)
+        let addresses = AddressServices::get_addresses_by_user_id(&state.conn, user.id)
             .await
             .expect("Cannot find addresses");
 

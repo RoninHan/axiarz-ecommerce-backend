@@ -28,6 +28,8 @@ use crate::controller::cart::CartController;
 use crate::controller::porduct::PorductController;
 use crate::controller::reviews::ReviewController;
 use crate::controller::user::UserController;
+use crate::controller::address::AddressController;
+use crate::controller::invoice::InvoiceController;
 
 use tools::AppState;
 
@@ -211,6 +213,49 @@ async fn start() -> anyhow::Result<()> {
             get(ReviewController::get_reviews_by_product_id),
         )
         .route("/api/payment", post(PaymentController::create_payment))
+        // 地址管理相关路由
+        .route("/api/address/create", post(AddressController::create_address).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/update/:id", post(AddressController::update_address).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/delete/:id", delete(AddressController::delete_address).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/get", get(AddressController::get_addresses_by_user_id).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/get/:id", get(AddressController::get_address_by_id))
+        // 发票管理相关路由
+        .route("/api/invoice/create", post(InvoiceController::create_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/update/:id", post(InvoiceController::update_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/delete/:id", delete(InvoiceController::delete_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/list", get(InvoiceController::get_invoices).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/get/:id", get(InvoiceController::get_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/default", get(InvoiceController::get_default_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
         // 静态文件服务
         .nest_service(
             "/static",

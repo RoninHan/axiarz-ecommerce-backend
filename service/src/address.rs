@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Serialize, Debug)]
 pub struct AddressModel {
-    pub user_id: i32,
+    pub receiver: String,
     pub phone: String,
     pub province: String,
     pub city: String,
@@ -21,9 +21,11 @@ impl AddressServices {
     pub async fn create_address(
         db: &DbConn,
         form_data: AddressModel,
+        user_id: i32,
     ) -> Result<address::ActiveModel, DbErr> {
         address::ActiveModel {
-            user_id: Set(form_data.user_id),
+            user_id: Set(user_id),
+            receiver: Set(form_data.receiver),
             phone: Set(form_data.phone),
             province: Set(form_data.province),
             city: Set(form_data.city),
@@ -42,6 +44,7 @@ impl AddressServices {
         db: &DbConn,
         id: i32,
         form_data: AddressModel,
+        user_id: i32,
     ) -> Result<address::Model, DbErr> {
         let address: address::ActiveModel = Address::find_by_id(id)
             .one(db)
@@ -51,7 +54,8 @@ impl AddressServices {
 
         address::ActiveModel {
             id: address.id,
-            user_id: Set(form_data.user_id),
+            user_id: Set(user_id),
+            receiver: Set(form_data.receiver),
             phone: Set(form_data.phone),
             province: Set(form_data.province),
             city: Set(form_data.city),

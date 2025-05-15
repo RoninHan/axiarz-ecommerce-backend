@@ -77,20 +77,36 @@ impl PaymentController {
             }
             // 支付宝支付
             1 => {
-                let mut biz_content = biz::TradeCreateBiz::new();
-                biz_content.set_subject("商品描述".into());
+                let mut biz_content = biz::TradePagePayBiz::new();
+                biz_content.set_subject("huawei Mate50".into());
                 biz_content.set_out_trade_no(out_trade_no.clone().into());
                 biz_content.set_total_amount(payload.amount.to_string().into());
-                biz_content.set("seller_id", "your_seller_id".into());
-                biz_content.set("notify_url", "https://your-domain.com/notify".into());
+                // 设置卖家ID
+                biz_content.set("seller_id", "2088721067342945".into()); //2088841836934905
+                // 设置回调地址
+                biz_content.set("notify_url", "https://www.axiarz.com/api/notify".into());
+
+                biz_content.set("Timestamp", "2025-05-10 23:52:04".into());
+
+                let alipay_root_cert_sn_path = "./sandbox/alipayRootCert.crt";
+                let alipay_public_key_path = "./sandbox/alipayPublicCert.crt";
+                let app_cert_sn_path = "./sandbox/appPublicCert.crt";
+
+                let app_cert_sn = alipay_sdk_rust::cert::get_cert_sn(app_cert_sn_path).unwrap();
+                let alipay_public_key = alipay_sdk_rust::cert::get_public_key_with_path(alipay_public_key_path).unwrap();
+                let alipay_root_cert_sn = alipay_sdk_rust::cert::get_root_cert_sn(alipay_root_cert_sn_path).unwrap();
+
+                println!("app_cert_sn: {:?}", app_cert_sn);
+                println!("alipay_public_key: {:?}", alipay_public_key);
+                println!("alipay_root_cert_sn: {:?}", alipay_root_cert_sn);
 
                 let modal = AliPaySDKModel {
-                    app_id: "your_app_id".to_string(),
-                    alipay_root_cert_sn: "your_alipay_root_cert_sn".to_string(),
-                    alipay_public_key: "your_alipay_public_key".to_string(),
-                    app_cert_sn: "your_app_cert_sn".to_string(),
-                    private_key: "your_private_key".to_string(),
-                    public_key: "your_public_key".to_string(),
+                    app_id: "2021000148665299".to_string(),//2021005148613160
+                    alipay_root_cert_sn: alipay_root_cert_sn,
+                    alipay_public_key: alipay_public_key,
+                    app_cert_sn: app_cert_sn,
+                    private_key: "MIIEpAIBAAKCAQEAopEI5NfIvBUN38gZsregDbEEYGJuN9zVKSI3SGbkOlN+oD9xKV1eZYR8rvLEcARAQned/UrcSixje4nMDW22BlEOoAzneNZT3Eka9Y6ze5P2OXw87haKlC1AEKXxBYTQ9RT0XB4znga52eojU2dZoHM/HkPwlg1POLbBwDnEdMsf4/7VtGgqzVKtrL5sTKPpkh18hBujKhyF4sZol865p0eDmM8GQHKMBJUe8yj0kzq22lVlHYualPIlIJOEI5rS8kQTUim2ZHVAcIXz0QzMVfu7ZP85vfST0LDKrUZ+KyGkVod6YLKVl+SwzX41Kua1vNNyWnwvFRH6/iCUpMChywIDAQABAoIBAGbzED3UBVROxQWFs/iA3wQsqQfc7c3EtN0ixP294ySowZT7+E7oySHjAA7OwOXrW0J8e/nvEYiLicivYCDU7KQdavSil2fn2x2y0jbV0wYckp6e9fsVHVdvPJYOcI89KBM83O8FVUzrF4FQDGUCGzlIIp2pCtALx7Kz0glIzAflpDqL62GsO0gtTsxsY+LLyq3ch/3sJCKxJrUxGLyUmQKepcV/PEOYC0+ELg2TYeDpW4B5PUPWCMWd3GzQLLMXR2xdYr/HPEq81eXGjid7xCrDOfRO9qDTdyn+ojL32NzgPU9n8p8e3nWQj7AtgnUeRcxfEGFrpz01qJ0YvD3IsmECgYEA1YQmSxp7iNFNDRIcEte8HyePztaCVnl5AE61HvUn01rPuUCfpmLJLtXDmw95m6veJHSetpX8yI2qRr5BlZ4LsCyndcWRhmc1nYoCVH6eImEv0dy/VseOCce/F9sffx1Tw8zsdVcd4TOeQ9AcFR5slR9ROSAsxrXKlSuWWV4KYBECgYEAwumq+JIqxybU/0gmxfLQNOTyw6cYwNniSYdQFjmkV6Hk0uL2yE6vsXS4TVhimXCrzNrLWmT4hYg/knlDHMtMGKoVivgv3rRaBrkpnB1BqA8wHepq3GtX6hVxNPqqO4qRfsLNS/co1lbF0Q1pzpAEJfDOJ+3Xqn2CkIIRLY+ggBsCgYEAhqoAVOHxBAut4w6G8kNqfOPAyZ11OwEGFfGOPmY0phLibF6b0p7/cDCWXBfYhRxS0P9UkqfqdLsUp+WbC7hQet7PB3KCJBi4MhI3Af+R0PEm7d+iNiNKLFT06yDirpNan2WBxUgaqkyaBv8clx1HMo479iGa3AEQMiD5hIfRV2ECgYAUa4qf9CBLMQRLonF9d4zcncfZO55aRflxHp4DVhKjo7Bnb6PPJH8/pizQ3Zum26kEE0AOvllTFA0k+VNQpvPX+am8H3hUaqyr26ZCVsZUJxMxbye25AAX5BsyI7jF+CR6FUqQ1NoQapLa7f7Rx0DIAMx4XnCjyfZt0VKfZVa5VQKBgQCXYVPSPQzZER7Pm5bX2I8MhYpfnerq2MKEHmTkSYRw4M4LxXgN8U4In9oBQMv4dFqdl8g6f3Hzvr97fUmZOF/WAcMmefdCGe5Kuv257w1E5aGG/UGm3LR7ptXoCntD5nBxGSvxJySsBSY4q/9Xe4yQ1927q2tYTYlxXE2+tCrIng==".to_string(),
+                    public_key: "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAugzTWWmvJuOJ/f/sPXM2YiPs3753Ehx+SQ/j4fA74TI1unczQsfS2gVaV31ueMv+tE+Bv86os5hd5KjS0Vxu0RgWsbR7tUCgMJlLgHcOyzldNlaO/FV7tJqFFdClSAtBPXvcz0inDNFW9e4Wme/4phDNCx0kSgWVRjmSF+69DjE35YIMW5qT1bOD+tzAojXG2j65qlO69OGxh/J6Dea2+oLXoLfwfWxP7rizffiO5e4MgGMRkwPsMLZ6izyRs6Eaz80YMghb4zAxFlBok9m+RvjewivAawL4Nsjmg1K3gfHuxv89tb/GJYIJwd50w75oHuq3yPntR4jJ80AST9JGUwIDAQAB".to_string(),
                 };
 
                 let client = Self::alipay_client(modal).await.map_err(|e| {
@@ -100,14 +116,17 @@ impl PaymentController {
                         "Failed to create Alipay client",
                     )
                 })?;
-
-                let res = client.trade_create(&biz_content).map_err(|e| {
+                println!("client: {:?}", "123123");
+                println!("biz_content: {:?}", serde_json::to_string(&biz_content).unwrap());
+                let res = client.trade_page_pay(&biz_content).map_err(|e| {
                     println!("Failed to create Alipay trade: {:?}", e);
                     (
                         StatusCode::INTERNAL_SERVER_ERROR,
                         "Failed to create Alipay trade",
                     )
                 })?;
+                println!("123111111");
+                println!("res: {:?}", res);
                 // 将响应转换为字符串再解析为JSON
                 let res_str = format!("{:?}", res);
                 res_data = Some(json!({
@@ -176,6 +195,7 @@ impl PaymentController {
         let json_data = to_value(data).unwrap();
         Ok(Json(json!(json_data)))
     }
+    
 
     // 支付回调处理
     pub async fn payment_notify(
