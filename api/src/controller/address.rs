@@ -1,6 +1,5 @@
 use crate::{
-    middleware::auth::Auth,
-    tools::{AppState, Params, ResponseData, ResponseStatus},
+    tools::{AppState, ResponseData, ResponseStatus},
 };
 use axum::{
     extract::{Path, Query, State},
@@ -24,15 +23,14 @@ impl AddressController {
         AddressServices::create_address(&state.conn, payload, user.id)
             .await
             .expect("Cannot create address");
-
-        let data = ResponseData {
+        let data = ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
-            data: json!({
-                "message": "Address created successfully"
-            }),
+            data: None,
+            code: 201,
+            message: Some("Address created successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -46,14 +44,14 @@ impl AddressController {
             .await
             .expect("Cannot update address");
 
-        let data = ResponseData {
+        let data = ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
-            data: json!({
-                "message": "Address updated successfully"
-            }),
+            data: None,
+            code: 200,
+            message: Some("Address updated successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -66,14 +64,14 @@ impl AddressController {
             .await
             .expect("Cannot delete address");
 
-        let data = ResponseData {
+        let data = ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
-            data: json!({
-                "message": "Address deleted successfully"
-            }),
+            data: None,
+            code: 200,
+            message: Some("Address deleted successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -85,14 +83,14 @@ impl AddressController {
             .await
             .expect("Cannot find addresses");
 
-        let data = ResponseData {
+        let data= ResponseData {
             status: ResponseStatus::Success,
-            data: json!({
-                "rows": addresses
-            }),
+            data: Some(json!(addresses)),
+            code: 200,
+            message: Some("Addresses retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -104,14 +102,22 @@ impl AddressController {
             .await
             .expect("Cannot find address");
 
-        let data = ResponseData {
-            status: ResponseStatus::Success,
-            data: json!({
-                "address": address
-            }),
+        let data = match address {
+            Some(addr) => ResponseData {
+                status: ResponseStatus::Success,
+                data: Some(json!(addr)),
+                code: 200,
+                message: Some("Address retrieved successfully".to_string()),
+            },
+            None => ResponseData {
+                status: ResponseStatus::Error,
+                data: None,
+                code: 404,
+                message: Some("Address not found".to_string()),
+            },
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
-} 
+}

@@ -30,5 +30,7 @@ pub enum ResponseStatus {
 #[derive(Deserialize, Serialize)]
 pub struct ResponseData<T> {
     pub status: ResponseStatus,
-    pub data: T,
+    pub code: i32,
+    pub message: Option<String>,
+    pub data: Option<T>,
 }

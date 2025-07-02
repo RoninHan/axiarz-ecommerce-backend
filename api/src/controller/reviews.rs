@@ -23,10 +23,15 @@ impl ReviewController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create review")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Review created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 201,
+            message: Some("Review created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn update_review_by_id(
@@ -34,7 +39,6 @@ impl ReviewController {
         state: State<AppState>,
         Json(payload): Json<ReviewModel>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        println!("Payload: {:?}", payload);
         ReviewServices::update_review_by_id(&state.conn, id, payload)
             .await
             .map_err(|e| {
@@ -42,10 +46,15 @@ impl ReviewController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update review")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Review updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Review updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     // 分页获取
@@ -64,13 +73,16 @@ impl ReviewController {
             (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get reviews")
         })?;
 
-        let data = ResponseData {
+       let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
+            data: Some(json!({
                     "reviews": reviews,
+                    "page": params.page.unwrap_or(1),
+                    "posts_per_page": params.posts_per_page.unwrap_or(10),
                 })
-            },
+            ),
+            code: 200,
+            message: Some("Reviews retrieved successfully".to_string()),
         };
 
         let json_data = to_value(data).unwrap();
@@ -91,10 +103,15 @@ impl ReviewController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete review")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Review deleted successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Review deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     // 根据产品 ID 获取评论
@@ -111,11 +128,9 @@ impl ReviewController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "reviews": reviews,
-                })
-            },
+            data: Some(json!(reviews)),
+            code: 200,
+            message: Some("Reviews retrieved successfully".to_string()),
         };
 
         let json_data = to_value(data).unwrap();

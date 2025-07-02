@@ -59,17 +59,19 @@ impl OrderController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get orders")
             })?;
 
-        let data = ResponseData {
+        let data= ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "orders": orders,
+            data: Some(json!({
+                    "rows": orders,
                     "num_pages": num_pages,
-                })
-            },
+                }))
+                
+            ,
+            code: 200,
+            message: Some("Orders retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -88,14 +90,18 @@ impl OrderController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "orders": orders,
-                })
-            },
+            data: 
+                Some(json!({
+                    "rows": orders,
+                    "page": params.page.unwrap_or(1),
+                    "posts_per_page": params.posts_per_page.unwrap_or(10),
+                }))
+            ,
+            code: 200,
+            message: Some("User orders retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -120,14 +126,14 @@ impl OrderController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
+            data: Some(json!({
                     "order": order,
                     "items": order_items,
-                })
-            },
+                }))
+            ,
+            code: 200,
+            message: Some("Order retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
         Ok(Json(json!(json_data)))
     }
@@ -162,8 +168,11 @@ impl OrderController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create order")
             })?;
 
+        // Extract order_id before using order.id multiple times
+        let order_id = order.id.unwrap();
+
         let form_data = OrderItemModel {
-            order_id: order.id.unwrap(),
+            order_id: order_id,
             product_id: payload.product_id.unwrap(),
             quantity: payload.quantity.unwrap(),
             price: payload.price.unwrap(),
@@ -179,10 +188,15 @@ impl OrderController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Order created successfully"
-        })))
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            data: Some(json!(order_id)),
+            code: 201,
+            message: Some("Order created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     // 更新订单状态
@@ -201,10 +215,15 @@ impl OrderController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Order status updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Order status updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     // 更新支付状态
@@ -223,10 +242,14 @@ impl OrderController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Payment status updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Payment status updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        Ok(Json(json!(json_data)))
     }
 
     // 取消订单
@@ -244,9 +267,13 @@ impl OrderController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Order cancelled successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Order cancelled successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        Ok(Json(json!(json_data)))
     }
 }

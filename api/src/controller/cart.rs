@@ -43,16 +43,18 @@ impl CartController {
         // 构建响应数据
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "cart_items": cart_items,
-                })
-            },
+            data: Some(json!({
+                    "rows": cart_items,
+                    "page": params.page.unwrap_or(1),
+                    "posts_per_page": params.posts_per_page.unwrap_or(10),
+                }))
+                
+            ,
+            code: 200,
+            message: Some("Cart items retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
         println!("Json data: {:?}", json_data);
-
         Ok(Json(json!(json_data)))
     }
 
@@ -79,10 +81,15 @@ impl CartController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Cart item created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 201,
+            message: Some("Cart item created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     /// 更新购物车商品信息
@@ -110,10 +117,15 @@ impl CartController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Cart item updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Cart item updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     /// 删除购物车商品
@@ -139,9 +151,14 @@ impl CartController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Cart item deleted successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Cart item deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 }

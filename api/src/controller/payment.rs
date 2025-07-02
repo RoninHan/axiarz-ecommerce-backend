@@ -163,15 +163,12 @@ impl PaymentController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "payment_data": res_data,
-                    "message": "Payment created successfully"
-                })
-            },
+            data: res_data,
+            code: 201,
+            message: Some("Payment created successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -189,10 +186,12 @@ impl PaymentController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: json!(payment),
+            data: Some(json!(payment)),
+            code: 200,
+            message: Some("Payment retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
     
@@ -223,10 +222,15 @@ impl PaymentController {
             )
         })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Payment status updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Payment notification processed successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     // 获取支付记录
@@ -241,12 +245,14 @@ impl PaymentController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get payments")
             })?;
 
-        let data = ResponseData {
+        let data= ResponseData {
             status: ResponseStatus::Success,
-            data: json!(payments),
+            data: Some(json!(payments)),
+            code: 200,
+            message: Some("Payments retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 

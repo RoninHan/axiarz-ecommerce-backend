@@ -25,15 +25,16 @@ impl CategoryController {
                 .expect("Cannot find categories in page");
 
         let data = ResponseData {
+            code: 200,
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "categories": categories,
-                    "num_pages": num_pages,
-                })
-            },
+            data: Some(json!({
+                "rows": categories,
+                "num_pages": num_pages,
+                "page": page,
+                "posts_per_page": posts_per_page,
+            })),
+            message: Some("Categories retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
         println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
@@ -54,10 +55,15 @@ impl CategoryController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Category created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 201,
+            message: Some("Category created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn update_category(
@@ -76,10 +82,15 @@ impl CategoryController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Category updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data:None,
+            code: 200,
+            message: Some("Category updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn delete_category(
@@ -111,9 +122,14 @@ impl CategoryController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Category deleted successfully"
-        })))
+       let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Category deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 }

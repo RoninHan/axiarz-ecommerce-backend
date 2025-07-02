@@ -27,13 +27,13 @@ impl UserController {
             .expect("Cannot find posts in page");
 
         let data = ResponseData {
+            code: 200,
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "rows": users,
-                    "num_pages": num_pages,
-                })
-            },
+            data: Some(json!({
+                "rows": users,
+                "num_pages": num_pages,
+            })),
+            message: Some("Users retrieved successfully".to_string()),
         };
 
         let json_data = to_value(data).unwrap();
@@ -59,10 +59,15 @@ impl UserController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create user")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "User created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            code: 201,
+            status: ResponseStatus::Success,
+            data: None,
+            message: Some("User created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn update_user(
@@ -75,9 +80,15 @@ impl UserController {
             .await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update user"))?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "User updated"})))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            code: 200,
+            status: ResponseStatus::Success,
+            data: None,
+            message: Some("User updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn delete_user(
@@ -88,10 +99,15 @@ impl UserController {
             .await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete user"))?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "User deleted"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            code: 200,
+            status: ResponseStatus::Success,
+            data: None,
+            message: Some("User deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))  
     }
 
     pub async fn get_user_by_id(
@@ -102,10 +118,23 @@ impl UserController {
             .await
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to find user"))?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "data": user
-        })))
+        let data = match user {
+            Some(user) => ResponseData {
+                code: 200,
+                status: ResponseStatus::Success,
+                data: Some(json!(user)),
+                message: Some("User retrieved successfully".to_string()),
+            },
+            None => ResponseData {
+                code: 404,
+                status: ResponseStatus::Error,
+                data: None,
+                message: Some("User not found".to_string()),
+            },
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn login(
@@ -125,7 +154,7 @@ impl UserController {
             .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to find user"))?;
 
         // Check if user is found
-        let user = user.unwrap();
+        let mut user = user.unwrap();
 
         // Check if password is found
         let hashed_password = &user.password;
@@ -139,15 +168,21 @@ impl UserController {
                         (StatusCode::INTERNAL_SERVER_ERROR, "Failed to encode token")
                     })?;
 
-                    Ok(Json(json!({
-                        "status": "success",
-                        "message": "Login successful",
-                        "data": {
+                    // Convert Model to UserModel (implement From<Model> for UserModel if not already)
+                    
+                    user.password = "".to_string();
+
+                    let data = ResponseData {
+                        code: 200,
+                        status: ResponseStatus::Success,
+                        data: Some(json!({
                             "token": token,
-                            "username":&user.name,
-                            "id":&user.id
-                        }
-                    })))
+                            "user": user,
+                        })),
+                        message: Some("Login successful".to_string()),
+                    };
+                    let json_data = to_value(data).unwrap();
+                    Ok(Json(json!(json_data)))
                 } else {
                     Err((StatusCode::UNAUTHORIZED, "Invalid password"))
                 }
@@ -175,9 +210,14 @@ impl UserController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to register user")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "User created successfully"
-        })))
+       let data = ResponseData::<Option<serde_json::Value>> {
+            code: 201,
+            status: ResponseStatus::Success,
+            data: None,
+            message: Some("User registered successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 }

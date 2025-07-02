@@ -26,12 +26,12 @@ impl BannerController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: { json!(banners) },
+            data: Some(json!(banners)),
+            code: 200,
+            message: Some("Banners retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
         println!("Json data: {:?}", json_data);
-
         Ok(Json(json!(json_data)))
     }
 
@@ -118,10 +118,15 @@ impl BannerController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create banner")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Banner created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 201,
+            message: Some("Banner created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn update_banner(
@@ -228,10 +233,15 @@ impl BannerController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update banner")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Banner updated successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Banner updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn delete_banner(
@@ -245,9 +255,15 @@ impl BannerController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete banner")
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Banner deleted successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Banner deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        
+        Ok(Json(json!(json_data)))
     }
 }

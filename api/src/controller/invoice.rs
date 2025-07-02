@@ -36,14 +36,14 @@ impl InvoiceController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to create invoice")
             })?;
 
-        let data = ResponseData {
+        let data = ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
-            data: json!({
-                "message": "Invoice created successfully"
-            }),
+            data:None,
+            code: 201,
+            message: Some("Invoice created successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -67,14 +67,14 @@ impl InvoiceController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to update invoice")
             })?;
 
-        let data = ResponseData {
+        let data= ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
-            data: json!({
-                "message": "Invoice updated successfully"
-            }),
+            data: None,
+            code: 200,
+            message: Some("Invoice updated successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -107,14 +107,14 @@ impl InvoiceController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to delete invoice")
             })?;
 
-        let data = ResponseData {
+        let data= ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
-            data: json!({
-                "message": "Invoice deleted successfully"
-            }),
+            data: None,
+            code: 200,
+            message: Some("Invoice deleted successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -132,12 +132,14 @@ impl InvoiceController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: json!({
+            data: Some(json!({
                 "invoices": invoices
-            }),
+            })),
+            code: 200,
+            message: Some("Invoices retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -162,12 +164,14 @@ impl InvoiceController {
 
             let data = ResponseData {
                 status: ResponseStatus::Success,
-                data: json!({
+                data: Some(json!({
                     "invoice": invoice
-                }),
+                })),
+                code: 200,
+                message: Some("Invoice retrieved successfully".to_string()),
             };
-
             let json_data = to_value(data).unwrap();
+            println!("Json data: {:?}", json_data);
             Ok(Json(json!(json_data)))
         } else {
             Err((StatusCode::NOT_FOUND, "Invoice not found"))
@@ -186,14 +190,24 @@ impl InvoiceController {
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get default invoice")
             })?;
 
-        let data = ResponseData {
-            status: ResponseStatus::Success,
-            data: json!({
-                "invoice": invoice
-            }),
+        let data = match invoice {
+            Some(invoice) => ResponseData {
+                status: ResponseStatus::Success,
+                data: Some(json!({
+                    "invoice": invoice
+                })),
+                code: 200,
+                message: Some("Default invoice retrieved successfully".to_string()),
+            },
+            None => ResponseData {
+                status: ResponseStatus::Error,
+                data: None,
+                code: 404,
+                message: Some("Default invoice not found".to_string()),
+            },
         };
-
         let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 } 

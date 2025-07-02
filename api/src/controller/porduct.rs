@@ -80,15 +80,14 @@ impl PorductController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: {
-                json!({
-                    "data": porducts,
-                    "num_pages": num_pages,
-                    "total_pages":total_pages
-                })
-            },
+            data: Some(json!({
+                "rows": porducts,
+                "total_pages": total_pages,
+                "num_pages": num_pages,
+            })),
+            code: 200,
+            message: Some("Porducts retrieved successfully".to_string()),
         };
-
         let json_data = to_value(data).unwrap();
         println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
@@ -309,10 +308,15 @@ impl PorductController {
                 })?;
         println!("Product categories data: {:?}", product_categories_data);
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Porduct created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 201,
+            message: Some("Porduct created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn update_porduct(
@@ -552,10 +556,15 @@ impl PorductController {
             )
         })?;
         println!("55555555555555555555555555");
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Porduct updated"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Porduct updated successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn delete_porduct(
@@ -575,10 +584,15 @@ impl PorductController {
         let _ =
             ProductCategoryServices::delete_product_category_by_product_id(&state.conn, id).await;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Porduct deleted"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Porduct deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn get_product_by_home_product_type(
@@ -636,7 +650,9 @@ impl PorductController {
 
         let data = ResponseData {
             status: ResponseStatus::Success,
-            data: json!(porducts),
+            data: Some(json!(porducts)),
+            code: 200,
+            message: Some("Porducts retrieved successfully".to_string()),
         };
 
         let json_data = to_value(data).unwrap();
@@ -729,10 +745,15 @@ impl PorductController {
         )
         .await;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Home page product type created successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 201,
+            message: Some("Home page product type created successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn delete_home_product(
@@ -749,13 +770,18 @@ impl PorductController {
                 )
             })?;
 
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Home page product type deleted successfully"
-        })))
+        let data = ResponseData::<Option<serde_json::Value>> {
+            status: ResponseStatus::Success,
+            data: None,
+            code: 200,
+            message: Some("Home page product type deleted successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
-    pub async fn get_porduct_by_id(
+    pub async fn get_product_by_id(
         state: State<AppState>,
         Path(id): Path<i32>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
@@ -769,13 +795,15 @@ impl PorductController {
                 )
             })?;
 
-        Ok(Json(json!(
-            {
-                "status": "success",
-                "message": "Porduct get success",
-                "data":porduct
-            }
-        )))
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            data: Some(json!(porduct)),
+            code: 200,
+            message: Some("Product retrieved successfully".to_string()),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 
     pub async fn get_product_by_new(
@@ -791,12 +819,14 @@ impl PorductController {
                 )
             })?;
 
-        Ok(Json(json!(
-            {
-                "status": "success",
-                "message": "Porduct get success",
-                "data":porduct
-            }
-        )))
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            message: Some("Product retrieved successfully".to_string()),
+            data: Some(json!(porduct)),
+            code: 200,
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
     }
 }
