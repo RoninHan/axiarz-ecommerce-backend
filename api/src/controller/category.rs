@@ -4,15 +4,14 @@ use axum::{
     http::StatusCode,
     response::Json,
 };
-
-use service::{CategoryModel, CategoryServices, ProductCategoryServices};
-
+use service::categories::{CategoryModel, CategoryServices};
+use service::product_categories::ProductCategoryServices;
 use serde_json::json;
 use serde_json::to_value;
 
-pub struct CategoriesController;
+pub struct CategoryController;
 
-impl CategoriesController {
+impl CategoryController {
     pub async fn list_categories(
         state: State<AppState>,
         Query(params): Query<Params>,

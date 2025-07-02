@@ -7,7 +7,7 @@ use axum::{
     http::StatusCode,
     response::Json,
 };
-use service::{LoginModel, UserModel, UserServices};
+use service::user::{LoginModel, UserModel, UserServices};
 
 use serde_json::json;
 use serde_json::to_value;
@@ -48,9 +48,8 @@ impl UserController {
         println!("Payload: {:?}", payload);
         // password md5
         let payload = UserModel {
-            password: Auth::hash_password(&payload.password).map_err(|_| {
-                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password")
-            })?,
+            password: Auth::hash_password(&payload.password)
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password"))?,
             ..payload
         };
         UserServices::create_user(&state.conn, payload)
@@ -111,7 +110,7 @@ impl UserController {
 
     pub async fn login(
         state: State<AppState>,
-        Json(mut payload): Json<LoginModel>,
+        Json(payload): Json<LoginModel>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
         let email = &payload.email;
         let password = &payload.password;
@@ -143,8 +142,11 @@ impl UserController {
                     Ok(Json(json!({
                         "status": "success",
                         "message": "Login successful",
-                        "token": token,
-                        "username":&user.name
+                        "data": {
+                            "token": token,
+                            "username":&user.name,
+                            "id":&user.id
+                        }
                     })))
                 } else {
                     Err((StatusCode::UNAUTHORIZED, "Invalid password"))
@@ -155,5 +157,27 @@ impl UserController {
                 "Failed to verify password",
             )),
         }
+    }
+
+    pub async fn register(
+        state: State<AppState>,
+        Json(payload): Json<UserModel>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let payload = UserModel {
+            password: Auth::hash_password(&payload.password)
+                .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "Failed to hash password"))?,
+            ..payload
+        };
+        UserServices::create_user(&state.conn, payload)
+            .await
+            .map_err(|e| {
+                println!("Failed to register user: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to register user")
+            })?;
+
+        Ok(Json(json!({
+            "status": "success",
+            "message": "User created successfully"
+        })))
     }
 }

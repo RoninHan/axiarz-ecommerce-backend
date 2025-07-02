@@ -8,7 +8,7 @@ use axum::{
 };
 use serde_json::json;
 use serde_json::to_value;
-use service::{BannerModel, BannerServices};
+use service::banner::{BannerModel, BannerServices};
 
 pub struct BannerController;
 

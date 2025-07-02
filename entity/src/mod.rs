@@ -9,6 +9,7 @@ pub mod categories;
 pub mod coupons;
 pub mod home_page_product_type;
 pub mod hot_search;
+pub mod invoice;
 pub mod order_items;
 pub mod orders;
 pub mod payments;

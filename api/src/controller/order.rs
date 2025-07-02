@@ -1,5 +1,3 @@
-
-
 use crate::tools::{AppState, Params, ResponseData, ResponseStatus};
 use axum::{
     extract::{Path, Query, State},
@@ -7,11 +5,13 @@ use axum::{
     response::Json,
     Extension,
 };
-use entity::{ users::Model as UserModel};
+use entity::{users::Model as UserModel};
 use serde_json::json;
 use serde_json::to_value;
 use service::{
-    sea_orm::prelude::Decimal, OrderItemModel, OrderItemServices, OrderModel, OrderServices,
+    sea_orm::prelude::Decimal,
+    order_items::{OrderItemModel, OrderItemServices},
+    orders::{OrderModel, OrderServices},
 };
 
 #[derive(serde::Deserialize, Debug)]
@@ -54,7 +54,10 @@ impl OrderController {
 
         let (orders, num_pages) = OrderServices::get_orders(&state.conn, page, posts_per_page)
             .await
-            .expect("Cannot find posts in page");
+            .map_err(|e| {
+                println!("Failed to get orders: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get orders")
+            })?;
 
         let data = ResponseData {
             status: ResponseStatus::Success,
@@ -67,11 +70,69 @@ impl OrderController {
         };
 
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
-    // 第一步创建订单
+    // 获取用户订单列表
+    pub async fn list_user_orders(
+        Extension(user): Extension<UserModel>,
+        state: State<AppState>,
+        Query(params): Query<Params>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let orders = OrderServices::get_orders_by_user_id(&state.conn, user.id)
+            .await
+            .map_err(|e| {
+                println!("Failed to get user orders: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get user orders")
+            })?;
+
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            data: {
+                json!({
+                    "orders": orders,
+                })
+            },
+        };
+
+        let json_data = to_value(data).unwrap();
+        Ok(Json(json!(json_data)))
+    }
+
+    // 获取订单详情
+    pub async fn get_order(
+        state: State<AppState>,
+        Path(id): Path<i32>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let order = OrderServices::get_order_by_id(&state.conn, id)
+            .await
+            .map_err(|e| {
+                println!("Failed to get order: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get order")
+            })?;
+
+        let order_items = OrderItemServices::get_order_items_by_order_id(&state.conn, id)
+            .await
+            .map_err(|e| {
+                println!("Failed to get order items: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get order items")
+            })?;
+
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            data: {
+                json!({
+                    "order": order,
+                    "items": order_items,
+                })
+            },
+        };
+
+        let json_data = to_value(data).unwrap();
+        Ok(Json(json!(json_data)))
+    }
+
+    // 创建订单
     pub async fn create_order(
         Extension(user): Extension<UserModel>,
         state: State<AppState>,
@@ -124,45 +185,47 @@ impl OrderController {
         })))
     }
 
-    pub async fn set_payment_status(
-        state: State<AppState>,
-        Path(id): Path<i32>,
-        Json(payload): Json<RequestPaymentStatusParams>,
-    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        OrderServices::set_payment_status(&state.conn, id, payload.payment_status.clone())
-            .await
-            .map_err(|e| {
-                println!("Failed to update porduct: {:?}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to update porduct",
-                )
-            })?;
-
-        Ok(Json(json!({
-            "status": "success",
-            "message": "Porduct updated"
-        })))
-    }
-
+    // 更新订单状态
     pub async fn update_order_status(
         state: State<AppState>,
         Path(id): Path<i32>,
         Json(payload): Json<RequestOrderStatusParams>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        OrderServices::set_order_status(&state.conn, id, payload.order_status.clone())
+        OrderServices::set_order_status(&state.conn, id, payload.order_status)
             .await
             .map_err(|e| {
-                println!("Failed to update porduct: {:?}", e);
+                println!("Failed to update order status: {:?}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to update porduct",
+                    "Failed to update order status",
                 )
             })?;
 
         Ok(Json(json!({
             "status": "success",
-            "message": "Porduct updated"
+            "message": "Order status updated successfully"
+        })))
+    }
+
+    // 更新支付状态
+    pub async fn set_payment_status(
+        state: State<AppState>,
+        Path(id): Path<i32>,
+        Json(payload): Json<RequestPaymentStatusParams>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        OrderServices::set_payment_status(&state.conn, id, payload.payment_status)
+            .await
+            .map_err(|e| {
+                println!("Failed to update payment status: {:?}", e);
+                (
+                    StatusCode::INTERNAL_SERVER_ERROR,
+                    "Failed to update payment status",
+                )
+            })?;
+
+        Ok(Json(json!({
+            "status": "success",
+            "message": "Payment status updated successfully"
         })))
     }
 
@@ -174,16 +237,16 @@ impl OrderController {
         OrderServices::set_order_status(&state.conn, id, 4)
             .await
             .map_err(|e| {
-                println!("Failed to update porduct: {:?}", e);
+                println!("Failed to cancel order: {:?}", e);
                 (
                     StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to update porduct",
+                    "Failed to cancel order",
                 )
             })?;
 
         Ok(Json(json!({
             "status": "success",
-            "message": "Porduct updated"
+            "message": "Order cancelled successfully"
         })))
     }
 }

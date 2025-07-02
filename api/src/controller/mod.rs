@@ -1,3 +1,6 @@
+/// 地址控制器模块
+pub(crate) mod address;
+
 /// 轮播图控制器模块
 pub(crate) mod banner;
 
@@ -6,6 +9,9 @@ pub(crate) mod cart;
 
 /// 分类控制器模块
 pub(crate) mod category;
+
+/// 发票控制器模块
+pub(crate) mod invoice;
 
 /// 订单控制器模块
 pub(crate) mod order;

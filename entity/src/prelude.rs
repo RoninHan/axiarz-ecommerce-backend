@@ -7,6 +7,7 @@ pub use super::categories::Entity as Categories;
 pub use super::coupons::Entity as Coupons;
 pub use super::home_page_product_type::Entity as HomePageProductType;
 pub use super::hot_search::Entity as HotSearch;
+pub use super::invoice::Entity as Invoice;
 pub use super::order_items::Entity as OrderItems;
 pub use super::orders::Entity as Orders;
 pub use super::payments::Entity as Payments;

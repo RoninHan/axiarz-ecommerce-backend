@@ -14,11 +14,26 @@ pub struct Model {
     pub stock_quantity: i32,
     pub price: Decimal,
     pub image_url: Option<String>,
+    pub type_name: Option<String>,
+    pub sku: Option<String>,
+    pub brand: Option<String>,
+    pub product_details: Option<String>,
+    pub product_information: Option<String>,
+    pub configuration_list: Option<String>,
+    pub wass: Option<String>,
+    pub is_new: i32,
     pub created_at: DateTimeWithTimeZone,
     pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Copy, Clone, Debug, EnumIter, DeriveRelation)]
-pub enum Relation {}
+pub enum Relation {
+    #[sea_orm(
+        has_many = "super::product_categories::Entity",
+        from = "Column::Id",
+        to = "super::product_categories::Column::ProductId"
+    )]
+    ProductCategories,
+}
 
 impl ActiveModelBehavior for ActiveModel {}

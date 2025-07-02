@@ -28,6 +28,8 @@ use crate::controller::cart::CartController;
 use crate::controller::porduct::PorductController;
 use crate::controller::reviews::ReviewController;
 use crate::controller::user::UserController;
+use crate::controller::address::AddressController;
+use crate::controller::invoice::InvoiceController;
 
 use tools::AppState;
 
@@ -67,6 +69,7 @@ async fn start() -> anyhow::Result<()> {
     let app = Router::new()
         // 用户认证相关路由
         .route("/api/login", post(UserController::login))
+        .route("/api/register", post(UserController::register))
         // 用户管理相关路由
         .route(
             "/api/user",
@@ -76,7 +79,7 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/user/{id}",
+            "/api/user/:id",
             get(UserController::get_user_by_id).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
@@ -90,14 +93,14 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/user/update/{id}",
+            "/api/user/update/:id",
             post(UserController::update_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/api/user/delete/{id}",
+            "/api/user/delete/:id",
             delete(UserController::delete_user).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
@@ -146,10 +149,18 @@ async fn start() -> anyhow::Result<()> {
                 axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
             ),
         )
+        .route(
+            "/api/product/new",
+            get(PorductController::get_product_by_new),
+        )
+        .route(
+            "/api/product/get/:id",
+            get(PorductController::get_porduct_by_id),
+        )
         // 分类管理相关路由
         .route(
             "/api/category/get",
-            get(CategoriesController::list_categories),
+            get(CategoryController::list_categories),
         )
         .route(
             "/api/category/create",
@@ -175,15 +186,15 @@ async fn start() -> anyhow::Result<()> {
         .route("/api/order/list", get(OrderController::list_orders))
         .route("/api/order/create", post(OrderController::create_order))
         .route(
-            "/api/order/update_status/{id}",
+            "/api/order/update_status/:id",
             post(OrderController::update_order_status),
         )
         .route(
-            "/api/order/set_payment/{id}",
+            "/api/order/set_payment/:id",
             post(OrderController::set_payment_status),
         )
         .route(
-            "/api/order/cancel_order/{id}",
+            "/api/order/cancel_order/:id",
             post(OrderController::cancel_order),
         )
         // 轮播图管理相关路由
@@ -210,32 +221,78 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         // 购物车管理相关路由
-        .route("/api/cart/get", get(CartController::list_cart_items))
+        .route("/api/cart/get", get(CartController::list_cart_items).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
         .route("/api/cart/create", post(CartController::create_cart_item))
         .route(
-            "/api/cart/update/{id}",
+            "/api/cart/update/:id",
             post(CartController::update_cart_item),
         )
         .route(
-            "/api/cart/delete/{id}",
+            "/api/cart/delete/:id",
             delete(CartController::delete_cart_item),
         )
         // 评论管理相关路由
         .route("/api/review/get", get(ReviewController::list_reviews))
         .route("/api/review/create", post(ReviewController::create_review))
         .route(
-            "/api/review/update/{id}",
+            "/api/review/update/:id",
             post(ReviewController::update_review_by_id),
         )
         .route(
-            "/api/review/delete/{id}",
+            "/api/review/delete/:id",
             delete(ReviewController::delete_review_by_id),
         )
         .route(
-            "/api/review/get_reviews_by_product_id/{id}",
+            "/api/review/get_reviews_by_product_id/:id",
             get(ReviewController::get_reviews_by_product_id),
         )
         .route("/api/payment", post(PaymentController::create_payment))
+        // 地址管理相关路由
+        .route("/api/address/create", post(AddressController::create_address).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/update/:id", post(AddressController::update_address).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/delete/:id", delete(AddressController::delete_address).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/get", get(AddressController::get_addresses_by_user_id).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/address/get/:id", get(AddressController::get_address_by_id))
+        // 发票管理相关路由
+        .route("/api/invoice/create", post(InvoiceController::create_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/update/:id", post(InvoiceController::update_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/delete/:id", delete(InvoiceController::delete_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/list", get(InvoiceController::get_invoices).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/get/:id", get(InvoiceController::get_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/invoice/default", get(InvoiceController::get_default_invoice).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
         // 静态文件服务
         .nest_service(
             "/static",

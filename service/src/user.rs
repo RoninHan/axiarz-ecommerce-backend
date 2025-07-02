@@ -9,7 +9,6 @@ pub struct UserModel {
     pub name: String,
     pub sex: String,
     pub email: String,
-    pub app_id: String,
     pub phone: String,
     pub birthday: Option<DateTimeWithTimeZone>,
     pub password: String,
@@ -28,7 +27,9 @@ impl UserServices {
         db: &DbConn,
         form_data: UserModel,
     ) -> Result<users::ActiveModel, DbErr> {
-        let sex: i32 = form_data.sex.parse().expect("msg");
+        let sex = form_data.sex.parse::<i32>()
+            .map_err(|_| DbErr::Custom("性别必须是数字".to_string()))?;
+            
         users::ActiveModel {
             name: Set(form_data.name.to_owned()),
             sex: Set(sex),
@@ -106,7 +107,7 @@ impl UserServices {
         email: &str,
     ) -> Result<Option<users::Model>, DbErr> {
         User::find()
-            .filter(users::Column::Email.contains(email))
+            .filter(users::Column::Email.eq(email))
             .one(db)
             .await
     }

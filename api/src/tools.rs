@@ -11,6 +11,8 @@ pub struct AppState {
 pub struct Params {
     pub page: Option<u64>,
     pub posts_per_page: Option<u64>,
+    pub q: Option<String>,
+    pub categories_id: Option<i32>,
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
