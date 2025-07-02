@@ -523,4 +523,25 @@ impl PorductController {
             "message": "Home page product type deleted successfully"
         })))
     }
+
+    pub async fn get_porduct_by_id(
+        state: State<AppState>,
+        Path(id): Path<i32>,
+    ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
+        let porduct = PorductServices::get_porduct_by_id(&state.conn, id)
+            .await
+            .map_err(|e| {
+                println!("Failed to get porduct by id: {:?}", e);
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get porduct by id")
+            })?;
+
+        
+        let data = ResponseData {
+            status: ResponseStatus::Success,
+            data: json!(porduct),
+        };
+        let json_data = to_value(data).unwrap();
+        println!("Json data: {:?}", json_data);
+        Ok(Json(json!(json_data)))
+    }
 }

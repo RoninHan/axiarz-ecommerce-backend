@@ -29,7 +29,7 @@ impl CategoriesController {
             status: ResponseStatus::Success,
             data: {
                 json!({
-                    "categories": categories,
+                    "rows": categories,
                     "num_pages": num_pages,
                 })
             },
