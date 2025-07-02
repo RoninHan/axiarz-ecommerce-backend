@@ -11,7 +11,7 @@ use axum::{
 };
 
 use controller::{
-    banner::BannerController, category::CategoryController, order::OrderController,
+    banner::BannerController, category::CategoriesController, order::OrderController,
     payment::PaymentController,
 };
 use middleware::auth::Auth;
@@ -109,16 +109,29 @@ async fn start() -> anyhow::Result<()> {
         // 商品管理相关路由
         .route("/api/product/get", get(PorductController::list_porducts))
         .route(
+            "/api/product/get/{id}",
+            get(PorductController::get_porduct_by_id),
+        )
+        .route(
             "/api/product/create",
-            post(PorductController::create_porduct),
+            post(PorductController::create_porduct).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
-            "/api/product/update/:id",
-            post(PorductController::update_porduct),
+            "/api/product/update/{id}",
+            post(PorductController::update_porduct).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
-            "/api/product/delete/:id",
-            delete(PorductController::delete_porduct),
+            "/api/product/delete/{id}",
+            delete(PorductController::delete_porduct).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
             "/api/product/home",
@@ -126,11 +139,15 @@ async fn start() -> anyhow::Result<()> {
         )
         .route(
             "/api/product/add_home_product",
-            post(PorductController::create_home_product),
+            post(PorductController::create_home_product).layer(
+                axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
+            ),
         )
         .route(
-            "/api/product/delete_home_product/:id",
-            delete(PorductController::delete_home_product),
+            "/api/product/delete_home_product/{id}",
+            delete(PorductController::delete_home_product).layer(
+                axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
+            ),
         )
         .route(
             "/api/product/new",
@@ -147,15 +164,23 @@ async fn start() -> anyhow::Result<()> {
         )
         .route(
             "/api/category/create",
-            post(CategoryController::create_category),
+            post(CategoriesController::create_category).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
-            "/api/category/update/:id",
-            post(CategoryController::update_category),
+            "/api/category/update/{id}",
+            post(CategoriesController::update_category).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
-            "/api/category/delete/:id",
-            delete(CategoryController::delete_category),
+            "/api/category/delete/{id}",
+            delete(CategoriesController::delete_category).layer(
+                axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
+            ),
         )
         // 订单管理相关路由
         .route("/api/order/list", get(OrderController::list_orders))
@@ -174,14 +199,26 @@ async fn start() -> anyhow::Result<()> {
         )
         // 轮播图管理相关路由
         .route("/api/banner/all", get(BannerController::list_banners_all))
-        .route("/api/banner/create", post(BannerController::create_banner))
         .route(
-            "/api/banner/update/:id",
-            post(BannerController::update_banner),
+            "/api/banner/create",
+            post(BannerController::create_banner).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
-            "/api/banner/delete/:id",
-            delete(BannerController::delete_banner),
+            "/api/banner/update/{id}",
+            post(BannerController::update_banner).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
+        )
+        .route(
+            "/api/banner/delete/{id}",
+            delete(BannerController::delete_banner).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         // 购物车管理相关路由
         .route("/api/cart/get", get(CartController::list_cart_items).layer(axum_middleware::from_fn_with_state(

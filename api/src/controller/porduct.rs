@@ -785,14 +785,11 @@ impl PorductController {
         state: State<AppState>,
         Path(id): Path<i32>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
-        let porduct: entity::products::Model = PorductServices::get_porduct_by_id(&state.conn, id)
+        let porduct = PorductServices::get_porduct_by_id(&state.conn, id)
             .await
             .map_err(|e| {
                 println!("Failed to get porduct by id: {:?}", e);
-                (
-                    StatusCode::INTERNAL_SERVER_ERROR,
-                    "Failed to get porduct by id",
-                )
+                (StatusCode::INTERNAL_SERVER_ERROR, "Failed to get porduct by id")
             })?;
 
         let data = ResponseData {
