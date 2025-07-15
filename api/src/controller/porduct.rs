@@ -12,7 +12,7 @@ use service::{
     home_page_product_type::{HomePageProductTypeModel, HomePageProductTypeServices},
     porducts::{PorductModel, PorductServices},
     product_categories::{ProductCategoryModel, ProductCategoryServices},
-    sea_orm::prelude::Decimal,
+    sea_orm::prelude::{DateTimeWithTimeZone, Decimal},
 };
 
 use serde_json::json;
@@ -28,6 +28,16 @@ pub struct ProductResponse {
     pub stock_quantity: i32,
     pub price: Decimal,
     pub image_url: Option<String>,
+    pub sku: Option<String>,
+    pub type_name: Option<String>,
+    pub brand: Option<String>,
+    pub product_details: Option<String>,
+    pub product_information: Option<String>,
+    pub configuration_list: Option<String>,
+    pub wass: Option<String>,
+    pub is_new: i32,
+    pub created_at: DateTimeWithTimeZone,
+    pub updated_at: DateTimeWithTimeZone,
 }
 
 #[derive(Debug, serde::Serialize)]
@@ -65,6 +75,16 @@ impl PorductController {
                 stock_quantity: porduct.stock_quantity,
                 price: porduct.price,
                 image_url: porduct.image_url,
+                sku: porduct.sku,
+                type_name: porduct.type_name,
+                brand: porduct.brand,
+                product_details: porduct.product_details,
+                product_information: porduct.product_information,
+                configuration_list: porduct.configuration_list,
+                wass: porduct.wass,
+                is_new: porduct.is_new,
+                created_at: porduct.created_at,
+                updated_at: porduct.updated_at,
             })
             .collect();
 
@@ -89,7 +109,7 @@ impl PorductController {
             message: Some("Porducts retrieved successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -160,7 +180,7 @@ impl PorductController {
                     )
                 })?;
                 price = Some(data);
-            } else if name == "image" {
+            } else if name == "image_url" {
                 // 提取圖片文件
                 let file_name = field.file_name().unwrap_or("default.png").to_string();
                 let file_data = field
@@ -315,7 +335,7 @@ impl PorductController {
             message: Some("Porduct created successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -387,7 +407,7 @@ impl PorductController {
                     )
                 })?;
                 price = Some(data);
-            } else if name == "image" {
+            } else if name == "image_url" {
                 // 提取圖片文件
                 let file_name = field.file_name().unwrap_or("default.png").to_string();
                 let file_data = field
@@ -480,6 +500,7 @@ impl PorductController {
                         "Failed to read wass field from form data",
                     )
                 })?;
+                println!("{}", data);
                 wass = Some(data);
             } else if name == "is_new" {
                 let data = field.text().await.map_err(|_| {
@@ -491,14 +512,12 @@ impl PorductController {
                 is_new = Some(data);
             }
         }
-        println!("1111111111111111111");
         let porduct = PorductServices::get_porduct_by_id(&state.conn, id)
             .await
             .map_err(|e| {
                 println!("Failed to find porduct: {:?}", e);
                 (StatusCode::INTERNAL_SERVER_ERROR, "Failed to find porduct")
             })?;
-        println!("2222222222222222222222");
         let product_data = PorductModel {
             name: product_name.unwrap_or(porduct.name),
             status: status
@@ -526,7 +545,8 @@ impl PorductController {
                 .unwrap(),
         };
 
-        println!("3333333333333333333333");
+        println!("Product data: {:?}", product_data);
+
         PorductServices::update_porduct_by_id(&state.conn, id, product_data)
             .await
             .map_err(|e| {
@@ -536,7 +556,6 @@ impl PorductController {
                     "Failed to update porduct",
                 )
             })?;
-        println!("444444444444444444444444");
         let product_cate_data = ProductCategoryModel {
             product_id: id,
             category_id: category_id.unwrap().parse().unwrap(),
@@ -555,7 +574,6 @@ impl PorductController {
                 "Failed to update product category",
             )
         })?;
-        println!("55555555555555555555555555");
         let data = ResponseData::<Option<serde_json::Value>> {
             status: ResponseStatus::Success,
             data: None,
@@ -563,7 +581,7 @@ impl PorductController {
             message: Some("Porduct updated successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -591,7 +609,7 @@ impl PorductController {
             message: Some("Porduct deleted successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -752,7 +770,7 @@ impl PorductController {
             message: Some("Home page product type created successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -777,7 +795,7 @@ impl PorductController {
             message: Some("Home page product type deleted successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -799,7 +817,7 @@ impl PorductController {
             message: Some("Product retrieved successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -823,7 +841,7 @@ impl PorductController {
             code: 200,
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
+        //println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 }

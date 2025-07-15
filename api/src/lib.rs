@@ -120,14 +120,14 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/product/update/{id}",
+            "/api/product/update/:id",
             post(PorductController::update_porduct).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/api/product/delete/{id}",
+            "/api/product/delete/:id",
             delete(PorductController::delete_porduct).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
@@ -144,7 +144,7 @@ async fn start() -> anyhow::Result<()> {
             ),
         )
         .route(
-            "/api/product/delete_home_product/{id}",
+            "/api/product/delete_home_product/:id",
             delete(PorductController::delete_home_product).layer(
                 axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
             ),
@@ -170,14 +170,14 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/category/update/{id}",
+            "/api/category/update/:id",
             post(CategoryController::update_category).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/api/category/delete/{id}",
+            "/api/category/delete/:id",
             delete(CategoryController::delete_category).layer(
                 axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
             ),
@@ -207,14 +207,14 @@ async fn start() -> anyhow::Result<()> {
             )),
         )
         .route(
-            "/api/banner/update/{id}",
+            "/api/banner/update/:id",
             post(BannerController::update_banner).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
-            "/api/banner/delete/{id}",
+            "/api/banner/delete/:id",
             delete(BannerController::delete_banner).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,

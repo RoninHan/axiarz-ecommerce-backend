@@ -77,6 +77,7 @@ impl PorductServices {
             product_information: Set(form_data.product_information.to_owned()),
             configuration_list: Set(form_data.configuration_list.to_owned()),
             is_new: Set(form_data.is_new),
+            wass: Set(form_data.wass.to_owned()),
             updated_at: Set(DateTimeWithTimeZone::from(Utc::now())),
             ..Default::default()
         }
