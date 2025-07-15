@@ -11,7 +11,7 @@ use axum::{
 };
 
 use controller::{
-    banner::BannerController, category::CategoriesController, order::OrderController,
+    banner::BannerController, category::CategoryController, order::OrderController,
     payment::PaymentController,
 };
 use middleware::auth::Auth;
@@ -110,7 +110,7 @@ async fn start() -> anyhow::Result<()> {
         .route("/api/product/get", get(PorductController::list_porducts))
         .route(
             "/api/product/get/{id}",
-            get(PorductController::get_porduct_by_id),
+            get(PorductController::get_product_by_id),
         )
         .route(
             "/api/product/create",
@@ -164,21 +164,21 @@ async fn start() -> anyhow::Result<()> {
         )
         .route(
             "/api/category/create",
-            post(CategoriesController::create_category).layer(axum_middleware::from_fn_with_state(
+            post(CategoryController::create_category).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
             "/api/category/update/{id}",
-            post(CategoriesController::update_category).layer(axum_middleware::from_fn_with_state(
+            post(CategoryController::update_category).layer(axum_middleware::from_fn_with_state(
                 state.clone(),
                 Auth::authorization_middleware,
             )),
         )
         .route(
             "/api/category/delete/{id}",
-            delete(CategoriesController::delete_category).layer(
+            delete(CategoryController::delete_category).layer(
                 axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
             ),
         )
