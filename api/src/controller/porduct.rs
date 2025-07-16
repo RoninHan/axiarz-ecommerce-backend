@@ -44,7 +44,9 @@ pub struct ProductResponse {
 pub struct HomeProductModal {
     pub name: String,
     pub image_url: Option<String>,
+    pub description: Option<String>,
     pub data: Vec<entity::products::Model>,
+
 }
 
 pub struct PorductController;
@@ -661,6 +663,7 @@ impl PorductController {
             let home_product: HomeProductModal = HomeProductModal {
                 name: home_page_product_type.name,
                 image_url: Some(home_page_product_type.image_url),
+                description: home_page_product_type.description,
                 data: porducts_temp,
             };
             porducts.push(home_product);
