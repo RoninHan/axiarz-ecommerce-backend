@@ -183,19 +183,31 @@ async fn start() -> anyhow::Result<()> {
             ),
         )
         // 订单管理相关路由
-        .route("/api/order/list", get(OrderController::list_orders))
-        .route("/api/order/create", post(OrderController::create_order))
+        .route("/api/order/list", get(OrderController::list_orders).layer(axum_middleware::from_fn_with_state(
+            state.clone(),
+            Auth::authorization_middleware,
+        )))
+        .route("/api/order/create", post(OrderController::create_order).layer(
+                axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware),
+            ))
         .route(
             "/api/order/update_status/:id",
-            post(OrderController::update_order_status),
+            post(OrderController::update_order_status).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
             "/api/order/set_payment/:id",
-            post(OrderController::set_payment_status),
+            post(OrderController::set_payment_status).layer(axum_middleware::from_fn_with_state(
+                state.clone(),
+                Auth::authorization_middleware,
+            )),
         )
         .route(
             "/api/order/cancel_order/:id",
-            post(OrderController::cancel_order),
+            post(OrderController::cancel_order)
+                .layer(axum_middleware::from_fn_with_state(state.clone(), Auth::authorization_middleware)),
         )
         // 轮播图管理相关路由
         .route("/api/banner/all", get(BannerController::list_banners_all))

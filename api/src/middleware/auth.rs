@@ -62,6 +62,7 @@ impl Auth {
                     .unwrap();
             }
         };
+        println!("Token data: {:?}", &token_data.claims.email);
         let current_user =
             UserServices::find_user_by_email(&state.conn, &token_data.claims.email).await;
         match current_user {

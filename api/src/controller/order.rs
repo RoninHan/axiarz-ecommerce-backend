@@ -65,13 +65,11 @@ impl OrderController {
                     "rows": orders,
                     "num_pages": num_pages,
                 }))
-                
             ,
             code: 200,
             message: Some("Orders retrieved successfully".to_string()),
         };
         let json_data = to_value(data).unwrap();
-        println!("Json data: {:?}", json_data);
         Ok(Json(json!(json_data)))
     }
 
@@ -140,7 +138,7 @@ impl OrderController {
 
     // 创建订单
     pub async fn create_order(
-        Extension(user): Extension<UserModel>,
+        Extension(user): Extension<entity::users::Model>,
         state: State<AppState>,
         Json(payload): Json<RequestData>,
     ) -> Result<Json<serde_json::Value>, (StatusCode, &'static str)> {
